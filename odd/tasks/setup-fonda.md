@@ -27,11 +27,11 @@ Rama: `feat/setup-fonda` (a crear desde `main`). Entrega: `single-pr`. Test runn
 
 | ID | Specs | Ruta | Quién | Estado | Commit |
 |---|---|---|---|---|---|
-| T1 | S1 | delegado (agente Sonnet 5.5): editar el asset, una línea | agente | hecho (diff de 1 línea verificado) | sin commit |
-| T2 | S1, S2 | inline (padre): copia de `Samples~` del paquete 3.6.1 (Starter Assets, Hands Interaction Demo, XR Interaction Simulator), borrado de 3.5.1, enlace de `m_SimulatorPrefab` | agente | hecho (GUIDs iguales a 3.5.1; refresh sin `error CS`) | sin commit |
+| T1 | S1 | delegado (agente Sonnet 5.5): editar el asset, una línea | agente | hecho (diff de 1 línea verificado) | d912c90 / e40eda2 |
+| T2 | S1, S2 | inline (padre): copia de `Samples~` del paquete 3.6.1 (Starter Assets, Hands Interaction Demo, XR Interaction Simulator), borrado de 3.5.1, enlace de `m_SimulatorPrefab` | agente | hecho (GUIDs iguales a 3.5.1; refresh sin `error CS`) | d912c90 / e40eda2 |
 | T3 | S3 | Play vía menú de Unity (computer-use) | padre + usuario | parcial: en Play de `Fonda` el simulador aparece (mandos simulados visibles), sin excepciones; falta probar agarrar/soltar a mano en SampleScene | — |
-| T4 | S4–S7, A1–A3 | delegado (Sonnet 5.5) + correcciones del padre; menú ejecutado por el padre | agente | hecho: `errors: 0`, zona 0,559 m, `Fonda.unity` en índice 0 | sin commit |
-| T5 | S5, S7 | Play en Fonda vía computer-use (teclas en segundo plano) | padre | hecho: control positivo W movió el cuerpo simulado; tras I×3, L×2, J, K×2 el XR Origin siguió en posición (0,0,0) y rotación (0,0,0); sin excepciones en el log | sin commit |
+| T4 | S4–S7, A1–A3 | delegado (Sonnet 5.5) + correcciones del padre; menú ejecutado por el padre | agente | hecho: `errors: 0`, zona 0,559 m, `Fonda.unity` en índice 0 | d912c90 / e40eda2 |
+| T5 | S5, S7 | Play en Fonda vía computer-use (teclas en segundo plano) | padre | hecho: control positivo W movió el cuerpo simulado; tras I×3, L×2, J, K×2 el XR Origin siguió en posición (0,0,0) y rotación (0,0,0); sin excepciones en el log | d912c90 / e40eda2 |
 
 Orden: T1 → T2 → T3 → T4 → T5. T2 debe ir antes de T4 para que la escena use el prefab 3.6.1.
 
@@ -53,4 +53,5 @@ Orden: T1 → T2 → T3 → T4 → T5. T2 debe ir antes de T4 para que la escena
 - **L14 (2026-11-23, evidencia del usuario):** captura del Game view en Play de `Fonda`: se ven mostrador y zona verde de ingredientes al mirar hacia abajo (S6, S7 visual OK).
 - **L15 (2026-11-23, pedido del usuario):** "probalo vos"
 - **L16 (2026-11-23, verificación S5):** ver T5. Limitación: no hay evidencia directa de que I/J/K/L llegaran al mando (van por la misma vía de teclado que W, que sí llegó). Agarrar/soltar (S3) sigue sin probar a mano; en `Fonda` no hay objetos agarrables todavía.
-- **Siguiente paso:** commit de trabajo en `feat/setup-fonda` (sin `.atl/`) y `gentle-ai review assess` sobre el commit.
+- **L17 (2026-11-23, entrega):** commits `d912c90` (samples 3.6.1 + simulador) y `e40eda2` (builder + escena Fonda). `gentle-ai review assess --base-ref main --committed-only --untracked-scope=exclude`: riesgo `medium`, `review_due: false` (`under_budget`); sin revisión nativa.
+- **Pendiente:** S3 agarrar/soltar a mano en SampleScene. Push y PR quedan a decisión del usuario.
