@@ -23,10 +23,10 @@ public static class FondaSceneBuilder
     // ---- Blockout dimensions (tune here) --------------------------------------------------
     const float FloorSize = 6f;
 
-    const float CounterWidth = 1.6f;   // x
-    const float CounterHeight = 0.9f;  // y
-    const float CounterDepth = 0.6f;   // z
-    const float CounterFrontZ = 0.3f;  // front edge (player side) distance from origin
+    internal const float CounterWidth = 1.6f;   // x
+    internal const float CounterHeight = 0.9f;  // y
+    internal const float CounterDepth = 0.6f;   // z
+    internal const float CounterFrontZ = 0.3f;  // front edge (player side) distance from origin
 
     const float WallZ = -1.0f;
     const float WallWidth = 3f;
@@ -43,7 +43,7 @@ public static class FondaSceneBuilder
     const float IngredientHalfWidth = 0.25f;
     const float IngredientNearZ = CounterFrontZ; // 0.3
     const float IngredientFarZ = 0.5f;
-    const float MaxReach = 0.6f;
+    internal const float MaxReach = 0.6f;
 
     const float MarkerLift = 0.003f; // avoids z-fighting with the surface below
 
@@ -90,6 +90,15 @@ public static class FondaSceneBuilder
             return;
         }
 
+        var layoutProblems = FondaCoreLoopBuilder.ValidateLayout();
+        if (layoutProblems.Count > 0)
+        {
+            var msg = "El layout del mostrador no cumple el alcance:\n- " + string.Join("\n- ", layoutProblems);
+            Debug.LogError("[FondaSceneBuilder] " + msg);
+            EditorUtility.DisplayDialog("Fonda", msg, "OK");
+            return;
+        }
+
         var errors = new List<string>();
 
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -102,7 +111,8 @@ public static class FondaSceneBuilder
 
         EnsureInteractionManager();
         DisableLocomotion(rig, errors);
-        BuildBlockout();
+        var fondaRoot = BuildBlockout();
+        FondaCoreLoopBuilder.Build(fondaRoot, errors);
 
         Directory.CreateDirectory(Path.GetDirectoryName(ScenePath));
         bool saved = EditorSceneManager.SaveScene(scene, ScenePath);
@@ -225,7 +235,7 @@ public static class FondaSceneBuilder
 
     // ---- S6/S7: blockout ------------------------------------------------------------------
 
-    static void BuildBlockout()
+    static Transform BuildBlockout()
     {
         var floorMat = GetOrCreateMaterial("Floor", new Color(0.55f, 0.42f, 0.30f));
         var counterMat = GetOrCreateMaterial("Counter", new Color(0.72f, 0.52f, 0.30f));
@@ -272,6 +282,8 @@ public static class FondaSceneBuilder
         zone.localPosition = new Vector3(0f, CounterHeight, zoneCenterZ);
         CreateFlatMarker("IngredientZoneMarker", zone, Vector3.up * MarkerLift,
                          new Vector2(IngredientHalfWidth * 2f, IngredientFarZ - IngredientNearZ), ingredientMat);
+
+        return root;
     }
 
     static void CreateFlatMarker(string name, Transform parent, Vector3 localOffset, Vector2 sizeXZ, Material mat)
@@ -288,7 +300,7 @@ public static class FondaSceneBuilder
 
     // ---- Materials (A3) -------------------------------------------------------------------
 
-    static Material GetOrCreateMaterial(string name, Color color)
+    internal static Material GetOrCreateMaterial(string name, Color color)
     {
         var path = MaterialsFolder + "/" + name + ".mat";
         var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
