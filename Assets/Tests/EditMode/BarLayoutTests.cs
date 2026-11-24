@@ -37,6 +37,26 @@ namespace Fonda.Tests
             Assert.AreEqual(degrees, AngleOf(stool), 1e-2f);
         }
 
+        // Tips S2: "Frasco de propinas en el extremo derecho de la barra (78°, a 0,45)".
+        [Test]
+        public void TipJar_IsAtTheRightEndOfTheBar()
+        {
+            var jar = FondaCoreLoopBuilder.TipJarPosition();
+            Assert.AreEqual(0.45f, RadiusOf(jar), 1e-3f);
+            Assert.AreEqual(78f, AngleOf(jar), 1e-2f);
+        }
+
+        // Tips A2: coins next to each tray without covering it.
+        [TestCase(0, 0.39f, 0f)]
+        [TestCase(1, 0.50f, -65f)]
+        [TestCase(2, 0.50f, 65f)]
+        public void CoinSpot_IsNextToItsTray(int seat, float radius, float degrees)
+        {
+            var spot = FondaCoreLoopBuilder.CoinSpotPosition(seat);
+            Assert.AreEqual(radius, RadiusOf(spot), 1e-3f);
+            Assert.AreEqual(degrees, AngleOf(spot), 1e-2f);
+        }
+
         // Existing check kept: everything interactable within reach, on the bar, away from the other sockets.
         [Test]
         public void Layout_PassesTheBuilderValidation()

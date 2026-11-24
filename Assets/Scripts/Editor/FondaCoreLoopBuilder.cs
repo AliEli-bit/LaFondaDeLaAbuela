@@ -19,6 +19,7 @@ public static class FondaCoreLoopBuilder
     const string RecipeFolder = "Assets/Data/Recipes";
     const string PrefabFolder = "Assets/Prefabs/Ingredients";
     const string CustomerPrefabPath = "Assets/Prefabs/Customer.prefab";
+    const string CoinPrefabPath = "Assets/Prefabs/TipCoin.prefab";
 
     // ---- Layout (GDD §5 "Distribución de la estación"; meters, player at the origin facing +z,
     //      angles in degrees measured from +z, negative to the left) --------------------------
@@ -40,6 +41,19 @@ public static class FondaCoreLoopBuilder
     const float TrayBaseDepth = 0.14f;
     const float SlotLift = 0.055f;           // socket center above the counter top
     const float SocketRadius = 0.045f;
+
+    // Tips (GDD §5 "Propinas en mano"; tips A2, A5).
+    const float TipJarRadius = 0.45f;
+    const float TipJarAngle = 78f;
+    const float JarInnerRadius = 0.06f;
+    const float JarHeight = 0.14f;
+    const float JarWall = 0.01f;
+    const int JarWallSegments = 12;
+    // Center seat: in front of its tray; side seats: past the outer end of their tray (no gap between trays).
+    static readonly (float radius, float angle)[] CoinSpots = { (0.39f, 0f), (0.50f, -65f), (0.50f, 65f) };
+    const float MinTipToOthers = 0.10f;    // coin spots and jar vs dispensers, slots and each other
+    const float CoinDiameter = 0.04f;
+    const float CoinThickness = 0.008f;
 
     const float StoolHeight = 0.65f;
     const float StoolRadius = 0.18f;
@@ -103,6 +117,12 @@ public static class FondaCoreLoopBuilder
     public static Vector3 TrayPosition(int seat) => Polar(TrayRadius, SeatAngles[seat]);
     public static Vector3 SeatPosition(int seat) => Polar(SeatRadius, SeatAngles[seat]);
 
+    /// <summary>"Frasco de propinas en el extremo derecho de la barra (78°, a 0,45)".</summary>
+    public static Vector3 TipJarPosition() => Polar(TipJarRadius, TipJarAngle);
+
+    /// <summary>Where each seat's customer leaves coins: next to its tray without covering it (tips A2).</summary>
+    public static Vector3 CoinSpotPosition(int seat) => Polar(CoinSpots[seat].radius, CoinSpots[seat].angle);
+
     static Vector3 SlotPosition(int seat, int slot) =>
         TrayPosition(seat) + Outward(SeatAngles[seat]) * new Vector3((slot - (SlotCount - 1) / 2f) * SlotSpacing, 0f, 0f);
 
@@ -138,6 +158,27 @@ public static class FondaCoreLoopBuilder
                     problems.Add(dName + " is only " + dist.ToString("F3") + " m from " + sName + " (minimum " + MinDispenserToSlot + " m).");
             }
 
+        // Tips: coin spots and the jar on the bar, within reach and clear of dispensers, slots and each other.
+        var tipPoints = new List<(string name, Vector3 p)> { ("tip jar", TipJarPosition()) };
+        for (int seat = 0; seat < SeatAngles.Length; seat++) tipPoints.Add(("coin spot " + SeatNames[seat], CoinSpotPosition(seat)));
+        foreach (var (name, p) in tipPoints)
+        {
+            float reach = new Vector2(p.x, p.z).magnitude;
+            float angle = Mathf.Atan2(p.x, p.z) * Mathf.Rad2Deg;
+            if (reach >= maxReach)
+                problems.Add(name + " is " + reach.ToString("F3") + " m from the player (limit " + maxReach + " m).");
+            if (reach < FondaSceneBuilder.BarInnerRadius + BarEdgeMargin || reach > FondaSceneBuilder.BarOuterRadius - BarEdgeMargin ||
+                Mathf.Abs(angle) > FondaSceneBuilder.BarHalfAngle)
+                problems.Add(name + " at r " + reach.ToString("F3") + ", " + angle.ToString("F1") + "° is off the bar top.");
+            foreach (var (other, q) in dispensers.Concat(slots).Concat(tipPoints))
+            {
+                if (other == name) continue;
+                float dist = Vector3.Distance(p, q);
+                if (dist < MinTipToOthers)
+                    problems.Add(name + " is only " + dist.ToString("F3") + " m from " + other + " (minimum " + MinTipToOthers + " m).");
+            }
+        }
+
         for (int a = 0; a < slots.Count; a++)
             for (int b = a + 1; b < slots.Count; b++)
             {
@@ -171,9 +212,11 @@ public static class FondaCoreLoopBuilder
         var menu = new List<RecipeData>();
         foreach (var def in Recipes) menu.Add(CreateOrUpdateRecipe(def, data));
 
+        var coinPrefab = BuildCoinPrefab();
         var seats = new BarSeat[SeatAngles.Length];
         for (int i = 0; i < seats.Length; i++)
-            seats[i] = BuildSeat(root, i, BuildTray(root, i));
+            seats[i] = BuildSeat(root, i, BuildTray(root, i), coinPrefab);
+        BuildTipJar(root);
         BuildDispensers(root, prefabs);
         BuildSpawner(root, BuildCustomerPrefab(), seats, menu, errors);
         AssetDatabase.SaveAssets();
@@ -378,7 +421,7 @@ public static class FondaCoreLoopBuilder
 
     // ---- Seats (S2) -----------------------------------------------------------------------
 
-    static BarSeat BuildSeat(Transform root, int seat, Tray tray)
+    static BarSeat BuildSeat(Transform root, int seat, Tray tray, TipCoin coinPrefab)
     {
         var stoolMat = FondaSceneBuilder.GetOrCreateMaterial("Stool", new Color(0.30f, 0.22f, 0.16f));
 
@@ -399,8 +442,108 @@ public static class FondaCoreLoopBuilder
         var so = new SerializedObject(seatComponent);
         so.FindProperty("tray").objectReferenceValue = tray;
         so.FindProperty("seatPoint").objectReferenceValue = go.transform;
+
+        var coinSpot = new GameObject("CoinSpot " + SeatNames[seat]).transform;
+        coinSpot.SetParent(root, false);
+        coinSpot.localPosition = CoinSpotPosition(seat) + Vector3.up * (FondaSceneBuilder.CounterHeight + 0.01f);
+        // The coin row runs along the spot's local x: along the arc in front of the center tray,
+        // radially (away from the neighboring tray) for the side seats.
+        coinSpot.localRotation = Outward(CoinSpots[seat].angle + (seat == 0 ? 0f : 90f));
+        so.FindProperty("coinSpot").objectReferenceValue = coinSpot;
+        so.FindProperty("coinPrefab").objectReferenceValue = coinPrefab;
         so.ApplyModifiedPropertiesWithoutUndo();
         return seatComponent;
+    }
+
+    // ---- Tips (tips S1-S3) -----------------------------------------------------------------
+
+    /// <summary>Grabbable coin (A5: larger than a real one so it can be picked up in VR).</summary>
+    static TipCoin BuildCoinPrefab()
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        go.name = "TipCoin";
+        go.transform.localScale = new Vector3(CoinDiameter, CoinThickness / 2f, CoinDiameter);
+        go.GetComponent<Renderer>().sharedMaterial = FondaSceneBuilder.GetOrCreateMaterial("Coin", new Color(0.95f, 0.75f, 0.20f));
+        Object.DestroyImmediate(go.GetComponent<Collider>()); // a capsule would make the coin roll like a ball
+        go.AddComponent<BoxCollider>().size = new Vector3(1f, 2f, 1f);
+
+        var rb = go.AddComponent<Rigidbody>();
+        rb.mass = 0.01f;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; // small and thrown into the jar
+        go.AddComponent<XRGrabInteractable>();
+        go.AddComponent<TipCoin>();
+
+        EnsureFolderPath("Assets/Prefabs");
+        var prefab = PrefabUtility.SaveAsPrefabAsset(go, CoinPrefabPath);
+        Object.DestroyImmediate(go);
+        return prefab.GetComponent<TipCoin>();
+    }
+
+    /// <summary>Open jar: a ring of wall boxes on a base, a trigger inside that counts coins, a pile and a label.</summary>
+    static void BuildTipJar(Transform root)
+    {
+        var glassMat = FondaSceneBuilder.GetOrCreateMaterial("TipJar", new Color(0.65f, 0.82f, 0.90f));
+        var coinMat = FondaSceneBuilder.GetOrCreateMaterial("Coin", new Color(0.95f, 0.75f, 0.20f));
+
+        var jar = new GameObject("TipJar");
+        jar.transform.SetParent(root, false);
+        jar.transform.localPosition = TipJarPosition() + Vector3.up * FondaSceneBuilder.CounterHeight;
+        jar.transform.localRotation = Outward(TipJarAngle);
+
+        var bottom = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        bottom.name = "Bottom";
+        bottom.transform.SetParent(jar.transform, false);
+        float outer = (JarInnerRadius + JarWall) * 2f;
+        bottom.transform.localScale = new Vector3(outer, JarWall / 2f, outer);
+        bottom.transform.localPosition = new Vector3(0f, JarWall / 2f, 0f);
+        bottom.GetComponent<Renderer>().sharedMaterial = glassMat;
+        Object.DestroyImmediate(bottom.GetComponent<Collider>());
+        bottom.AddComponent<BoxCollider>().size = new Vector3(1f, 2f, 1f);
+
+        float segment = 2f * Mathf.PI * (JarInnerRadius + JarWall / 2f) / JarWallSegments * 1.05f;
+        for (int i = 0; i < JarWallSegments; i++)
+        {
+            float a = i * 360f / JarWallSegments;
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "Wall " + i;
+            wall.transform.SetParent(jar.transform, false);
+            wall.transform.localRotation = Quaternion.Euler(0f, a, 0f);
+            wall.transform.localPosition = Quaternion.Euler(0f, a, 0f) * new Vector3(0f, JarHeight / 2f, JarInnerRadius + JarWall / 2f);
+            wall.transform.localScale = new Vector3(segment, JarHeight, JarWall);
+            wall.GetComponent<Renderer>().sharedMaterial = glassMat;
+        }
+
+        // Trigger filling the inside of the jar: a released coin in here is counted.
+        var trigger = jar.AddComponent<BoxCollider>();
+        trigger.isTrigger = true;
+        float inside = JarInnerRadius * 1.4f;
+        trigger.size = new Vector3(inside, JarHeight - JarWall, inside);
+        trigger.center = new Vector3(0f, JarWall + (JarHeight - JarWall) / 2f, 0f);
+
+        var pile = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        pile.name = "Pile";
+        pile.transform.SetParent(jar.transform, false);
+        pile.transform.localScale = new Vector3(JarInnerRadius * 1.8f, 0.001f, JarInnerRadius * 1.8f);
+        pile.transform.localPosition = new Vector3(0f, JarWall, 0f);
+        pile.GetComponent<Renderer>().sharedMaterial = coinMat;
+        Object.DestroyImmediate(pile.GetComponent<Collider>());
+        pile.SetActive(false);
+
+        var labelGo = new GameObject("Label");
+        labelGo.transform.SetParent(jar.transform, false);
+        labelGo.transform.localPosition = new Vector3(0f, JarHeight + 0.06f, 0f); // forward is away from the player
+        var label = labelGo.AddComponent<TextMeshPro>();
+        label.rectTransform.sizeDelta = new Vector2(0.3f, 0.06f);
+        label.fontSize = 0.5f;
+        label.alignment = TextAlignmentOptions.Center;
+        label.color = new Color(0.20f, 0.15f, 0.10f);
+        label.text = "Propinas: $0";
+
+        var tipJar = jar.AddComponent<TipJar>();
+        var so = new SerializedObject(tipJar);
+        so.FindProperty("label").objectReferenceValue = label;
+        so.FindProperty("pile").objectReferenceValue = pile.transform;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     // ---- Customers (S3-S5) ----------------------------------------------------------------
