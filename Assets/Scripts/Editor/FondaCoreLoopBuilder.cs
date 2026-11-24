@@ -49,17 +49,18 @@ public static class FondaCoreLoopBuilder
     static readonly float[] SeatX = { 0f, -0.60f, 0.60f };
     static readonly string[] SeatNames = { "Center", "Left", "Right" };
 
-    const float SlotSpacing = 0.10f;         // along the tray, which faces the player
-    const int SlotCount = 3;                 // longest menu dish has 3 ingredients
-    const float MinDispenserToSlot = 0.15f;  // so a socket never grabs a resting ingredient
+    // The longest dish has 3 ingredients; 2 more layers leave room for wrong ones the player has not taken out yet.
+    const int SlotCount = 5;
+    const float MinDispenserToSlot = 0.15f;  // so a tray never grabs an ingredient resting on its dispenser
     const float BarEdgeMargin = 0.05f;       // keep things off the bar edges
 
     const float PlateHeight = 0.01f;
     const float SpawnLift = 0.045f;          // spawn point above the counter top
     const float TrayBaseHeight = 0.02f;
-    const float TrayBaseDepth = 0.14f;
-    const float SlotLift = 0.055f;           // socket center above the counter top
-    const float SocketRadius = 0.045f;
+    const float TrayWidth = 0.20f;           // along x
+    const float TrayBaseDepth = 0.16f;       // along z
+    const float CatchHeight = 0.15f;         // the tray catches what is released this high above it
+    const float BaseDiameter = 0.12f;        // the bun or bowl the dish is piled on
 
     // Tips (GDD §5 "Propinas en mano"; tips A2, A5).
     static readonly Vector2 TipJarXZ = new Vector2(0.53f, 0.24f); // right end of the bar
@@ -146,9 +147,8 @@ public static class FondaCoreLoopBuilder
     /// <summary>Where each seat's customer leaves coins: next to its tray without covering it (tips A2).</summary>
     public static Vector3 CoinSpotPosition(int seat) => OnFloor(CoinSpots[seat].x, CoinSpots[seat].y);
 
-    // Slots run along x, facing the player.
-    static Vector3 SlotPosition(int seat, int slot) =>
-        TrayPosition(seat) + new Vector3((slot - (SlotCount - 1) / 2f) * SlotSpacing, 0f, 0f);
+    // The slots of a tray all pile the dish on the middle of its base.
+    static Vector3 SlotPosition(int seat) => TrayPosition(seat);
 
     /// <summary>True when the point is on the bar top, at least BarEdgeMargin from every edge.</summary>
     static bool OnBarTop(Vector3 p) =>
@@ -163,8 +163,7 @@ public static class FondaCoreLoopBuilder
         var slots = new List<(string name, Vector3 p)>();
         foreach (var def in Ingredients) dispensers.Add(("dispenser " + def.Id, DispenserPosition(def.Id)));
         for (int seat = 0; seat < SeatNames.Length; seat++)
-            for (int s = 0; s < SlotCount; s++)
-                slots.Add(("seat " + SeatNames[seat] + " slot " + (s + 1), SlotPosition(seat, s)));
+            slots.Add(("seat " + SeatNames[seat] + " dish", SlotPosition(seat)));
 
         float maxReach = FondaSceneBuilder.MaxReach;
         foreach (var (name, p) in dispensers.Concat(slots))
@@ -204,12 +203,13 @@ public static class FondaCoreLoopBuilder
             }
         }
 
+        // Each tray catches over its whole surface: two trays must not overlap, or one drop could land in both.
         for (int a = 0; a < slots.Count; a++)
             for (int b = a + 1; b < slots.Count; b++)
             {
-                float dist = Vector3.Distance(slots[a].p, slots[b].p);
-                if (dist < 2f * SocketRadius)
-                    problems.Add(slots[a].name + " and " + slots[b].name + " overlap (" + dist.ToString("F3") + " m apart).");
+                var d = slots[a].p - slots[b].p;
+                if (Mathf.Abs(d.x) < TrayWidth && Mathf.Abs(d.z) < TrayBaseDepth)
+                    problems.Add(slots[a].name + " and " + slots[b].name + " overlap (" + Mathf.Abs(d.x).ToString("F3") + " m apart).");
             }
         return problems;
     }
@@ -336,55 +336,50 @@ public static class FondaCoreLoopBuilder
     {
         float top = FondaSceneBuilder.CounterHeight;
         var trayMat = FondaSceneBuilder.GetOrCreateMaterial("Tray", new Color(0.85f, 0.85f, 0.80f));
-        var slotMat = FondaSceneBuilder.GetOrCreateMaterial("TraySlotMarker", new Color(0.40f, 0.40f, 0.45f));
 
         var tray = new GameObject("Tray " + SeatNames[seat]);
         tray.transform.SetParent(root, false);
         tray.transform.localPosition = TrayPosition(seat) + Vector3.up * top;
-        // Identity rotation: the slots run along x, facing the player.
+        // Identity rotation: the tray faces the player.
 
-        float baseWidth = (SlotCount - 1) * SlotSpacing + 0.10f;
         var baseGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
         baseGo.name = "TrayBase";
         baseGo.transform.SetParent(tray.transform, false);
-        baseGo.transform.localScale = new Vector3(baseWidth, TrayBaseHeight, TrayBaseDepth);
+        baseGo.transform.localScale = new Vector3(TrayWidth, TrayBaseHeight, TrayBaseDepth);
         baseGo.transform.localPosition = new Vector3(0f, TrayBaseHeight / 2f, 0f);
         var baseRenderer = baseGo.GetComponent<Renderer>();
         baseRenderer.sharedMaterial = trayMat;
 
+        // All slots sit on the middle of the dish and catch over the whole tray. The Tray opens only the next empty
+        // one and moves its attach point to the top of the pile, so every drop lands on the stack.
         var slots = new XRSocketInteractor[SlotCount];
         for (int i = 0; i < SlotCount; i++)
         {
             var slotGo = new GameObject("Slot " + (i + 1));
             slotGo.transform.SetParent(tray.transform, false);
-            slotGo.transform.localPosition = new Vector3((i - (SlotCount - 1) / 2f) * SlotSpacing, SlotLift, 0f);
+            slotGo.transform.localPosition = new Vector3(0f, TrayBaseHeight, 0f);
 
-            var trigger = slotGo.AddComponent<SphereCollider>();
+            var trigger = slotGo.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
-            trigger.radius = SocketRadius;
+            trigger.size = new Vector3(TrayWidth, CatchHeight, TrayBaseDepth);
+            trigger.center = new Vector3(0f, CatchHeight / 2f, 0f);
+
+            var attach = new GameObject("Attach").transform;
+            attach.SetParent(slotGo.transform, false);
 
             var socket = slotGo.AddComponent<XRSocketInteractor>();
+            socket.attachTransform = attach;
             socket.showInteractableHoverMeshes = false;
             var filter = slotGo.AddComponent<IngredientOnlySocketFilter>(); // S9: sauces never enter a slot
             socket.startingHoverFilters.Add(filter);
             socket.startingSelectFilters.Add(filter);
             slots[i] = socket;
-
-            // Visual marker: a flat disc on the tray surface (no collider).
-            var marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            marker.name = "SlotMarker";
-            marker.transform.SetParent(slotGo.transform, false);
-            marker.transform.localPosition = new Vector3(0f, TrayBaseHeight - SlotLift + 0.002f, 0f);
-            marker.transform.localScale = new Vector3(0.08f, 0.002f, 0.08f);
-            marker.GetComponent<Renderer>().sharedMaterial = slotMat;
-            Object.DestroyImmediate(marker.GetComponent<Collider>());
         }
 
         // The dish base sits under the slots. Visual only (no collider), it is not an ingredient.
-        float baseLength = (SlotCount - 1) * SlotSpacing + 0.08f;
-        var bunBase = CreateBaseVisual(tray.transform, "BunBase", new Vector3(baseLength, 0.016f, 0.11f),
+        var bunBase = CreateBaseVisual(tray.transform, "BunBase", new Vector3(BaseDiameter, 0.016f, BaseDiameter),
             FondaSceneBuilder.GetOrCreateMaterial("DishBase_Bun", new Color(0.86f, 0.62f, 0.32f)));
-        var bowlBase = CreateBaseVisual(tray.transform, "BowlBase", new Vector3(baseLength, 0.03f, 0.12f),
+        var bowlBase = CreateBaseVisual(tray.transform, "BowlBase", new Vector3(BaseDiameter + 0.02f, 0.03f, BaseDiameter + 0.02f),
             FondaSceneBuilder.GetOrCreateMaterial("DishBase_Bowl", new Color(0.92f, 0.92f, 0.95f)));
 
         var trayComponent = tray.AddComponent<Tray>();
