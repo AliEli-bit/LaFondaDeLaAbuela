@@ -20,6 +20,7 @@ public static class FondaCoreLoopBuilder
     const string PrefabFolder = "Assets/Prefabs/Ingredients";
     const string CustomerPrefabPath = "Assets/Prefabs/Customer.prefab";
     const string CoinPrefabPath = "Assets/Prefabs/TipCoin.prefab";
+    const string CustomerProfileFolder = "Assets/Data/Customers";
 
     // ---- Layout (GDD §5 "Distribución de la estación"; meters, player at the origin facing +z,
     //      x to the right). Straight bar: dispensers in a row, one tray per seat. The side trays sit
@@ -227,7 +228,8 @@ public static class FondaCoreLoopBuilder
         var tipJar = BuildTipJar(root);
         BuildDispensers(root, prefabs);
         var clock = BuildClock(root, errors);
-        var spawner = BuildSpawner(root, BuildCustomerPrefab(errors), seats, menu, clock, errors);
+        var profiles = GetOrCreateCustomerProfiles(menu, errors);
+        var spawner = BuildSpawner(root, BuildCustomerPrefab(errors), seats, menu, profiles, clock, errors);
         BuildShiftManager(root, clock, spawner, tipJar);
         AssetDatabase.SaveAssets();
     }
@@ -552,6 +554,74 @@ public static class FondaCoreLoopBuilder
     // The chibi heads are about twice a real head; at full Blender size a seated customer fills the player's view.
     const float CustomerLookScale = 0.75f;
     static readonly string[] CustomerTypes = { "Office", "Grandpa", "Child", "Regular", "Worker", "Student", "Tourist", "Stingy" };
+    public static IReadOnlyList<string> CustomerTypeNames => CustomerTypes;
+
+    /// <summary>Starting values of one customer type (customer types S2, A1-A6).</summary>
+    public struct CustomerProfileDef
+    {
+        public string Type, DisplayName, OrderTitle;
+        public float Patience, Eat;
+        public int MinCoins, MaxCoins;
+        /// <summary>Recipe file names; null: any dish.</summary>
+        public string[] Favorites;
+    }
+
+    // The GDD table (S2) with the tip ranges of A1, the tourist's longer meal (A2) and "lo de siempre" (A6).
+    public static readonly CustomerProfileDef[] CustomerProfiles =
+    {
+        new CustomerProfileDef { Type = "Office",  DisplayName = "Oficinista apurado", Patience = 0.7f, Eat = 1f, MinCoins = 0, MaxCoins = 3 },
+        new CustomerProfileDef { Type = "Grandpa", DisplayName = "Abuelito paciente",  Patience = 1.5f, Eat = 1f, MinCoins = 1, MaxCoins = 3, Favorites = new[] { "HamburguesaSola", "TazonDePapas" } },
+        new CustomerProfileDef { Type = "Child",   DisplayName = "Niño",               Patience = 1.0f, Eat = 1f, MinCoins = 1, MaxCoins = 2, Favorites = new[] { "TazonDePapas" } },
+        new CustomerProfileDef { Type = "Regular", DisplayName = "Habitual",           Patience = 1.0f, Eat = 1f, MinCoins = 2, MaxCoins = 3, OrderTitle = "¡Lo de siempre, doña!" },
+        new CustomerProfileDef { Type = "Worker",  DisplayName = "Trabajador de obra", Patience = 1.0f, Eat = 1f, MinCoins = 2, MaxCoins = 3, Favorites = new[] { "HamburguesaCompleta", "LomitoCompleto" } },
+        new CustomerProfileDef { Type = "Student", DisplayName = "Estudiante",         Patience = 1.2f, Eat = 1f, MinCoins = 1, MaxCoins = 2, Favorites = new[] { "HamburguesaSola", "TazonDePapas" } },
+        new CustomerProfileDef { Type = "Tourist", DisplayName = "Turista",            Patience = 1.3f, Eat = 2f, MinCoins = 0, MaxCoins = 3 },
+        new CustomerProfileDef { Type = "Stingy",  DisplayName = "Tacaño",             Patience = 1.0f, Eat = 1f, MinCoins = 0, MaxCoins = 1 },
+    };
+
+    /// <summary>
+    /// One profile asset per customer type (A8): created with the GDD values only when missing, so hand-tuned values
+    /// survive a rebuild.
+    /// </summary>
+    static CustomerProfile[] GetOrCreateCustomerProfiles(List<RecipeData> menu, List<string> errors)
+    {
+        EnsureFolderPath(CustomerProfileFolder);
+        var profiles = new CustomerProfile[CustomerProfiles.Length];
+        for (int i = 0; i < CustomerProfiles.Length; i++)
+        {
+            var def = CustomerProfiles[i];
+            var path = CustomerProfileFolder + "/" + def.Type + ".asset";
+            var asset = AssetDatabase.LoadAssetAtPath<CustomerProfile>(path);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<CustomerProfile>();
+                var so = new SerializedObject(asset);
+                so.FindProperty("displayName").stringValue = def.DisplayName;
+                so.FindProperty("lookIndex").intValue = System.Array.IndexOf(CustomerTypes, def.Type);
+                so.FindProperty("patienceMultiplier").floatValue = def.Patience;
+                so.FindProperty("eatMultiplier").floatValue = def.Eat;
+                so.FindProperty("minCoins").intValue = def.MinCoins;
+                so.FindProperty("maxCoins").intValue = def.MaxCoins;
+                so.FindProperty("orderTitle").stringValue = def.OrderTitle;
+                so.FindProperty("weight").floatValue = 1f;
+                var favorites = so.FindProperty("favorites");
+                var names = def.Favorites ?? new string[0];
+                favorites.arraySize = names.Length;
+                for (int f = 0; f < names.Length; f++)
+                {
+                    int r = System.Array.FindIndex(Recipes, x => x.FileName == names[f]);
+                    if (r < 0 || r >= menu.Count) errors.Add(def.Type + " favourite " + names[f] + " is not on the menu.");
+                    favorites.GetArrayElementAtIndex(f).objectReferenceValue = r >= 0 && r < menu.Count ? menu[r] : null;
+                }
+                so.ApplyModifiedPropertiesWithoutUndo();
+                AssetDatabase.CreateAsset(asset, path);
+            }
+            if (asset.LookIndex < 0 || asset.LookIndex >= CustomerTypes.Length)
+                errors.Add(path + " has look index " + asset.LookIndex + "; it shows a random character.");
+            profiles[i] = asset;
+        }
+        return profiles;
+    }
 
     /// <summary>
     /// Customer prefab: the 8 Blender characters under one body (one shown at random per customer) and a speech bubble.
@@ -685,7 +755,7 @@ public static class FondaCoreLoopBuilder
     }
 
     static CustomerSpawner BuildSpawner(Transform root, Customer prefab, BarSeat[] seats, List<RecipeData> menu,
-        FondaClock clock, List<string> errors)
+        CustomerProfile[] profiles, FondaClock clock, List<string> errors)
     {
         var door = new GameObject("Door").transform;
         door.SetParent(root, false);
@@ -705,6 +775,9 @@ public static class FondaCoreLoopBuilder
         var menuProp = so.FindProperty("menu");
         menuProp.arraySize = menu.Count;
         for (int i = 0; i < menu.Count; i++) menuProp.GetArrayElementAtIndex(i).objectReferenceValue = menu[i];
+        var profilesProp = so.FindProperty("profiles");
+        profilesProp.arraySize = profiles.Length;
+        for (int i = 0; i < profiles.Length; i++) profilesProp.GetArrayElementAtIndex(i).objectReferenceValue = profiles[i];
         so.ApplyModifiedPropertiesWithoutUndo();
 
         if (prefab == null) errors.Add("Customer prefab could not be saved at " + CustomerPrefabPath + ".");
