@@ -67,12 +67,12 @@ The customer characters are generated in Blender from `Tools/Blender/fonda_figur
 
 | Folder | Contents |
 |---|---|
-| `Assets/Scripts/Gameplay/` | Game components (customers, seats, trays, tips, shift clock) |
-| `Assets/Scripts/Data/` | ScriptableObject definitions (ingredients, recipes, difficulty) |
+| `Assets/Scripts/Gameplay/` | Game components (customers, seats, trays, tips, shift clock, sounds) |
+| `Assets/Scripts/Data/` | ScriptableObject definitions (ingredients, recipes, difficulty, customer types, sounds) |
 | `Assets/Scripts/Editor/` | Scene builders and import rules |
 | `Assets/Tests/EditMode/` | Edit Mode tests |
 | `Assets/Art/` | Project art (characters, sketch materials) |
-| `Assets/ThirdParty/` | Third-party packs (KayKit Restaurant Bits) |
+| `Assets/ThirdParty/` | Third-party packs (KayKit Restaurant Bits, Kenney audio) |
 | `Tools/Blender/` | Character generator for Blender |
 | `odd/tasks/` | Feature task logs |
 

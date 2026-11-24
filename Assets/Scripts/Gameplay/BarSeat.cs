@@ -32,6 +32,11 @@ namespace Fonda
 
         public UnityEvent onFreed;
         public event Action<BarSeat> Freed;
+        /// <summary>A customer left this many coins (always 1 or more) by the tray (feedback S4).</summary>
+        public event Action<BarSeat, int> TipLeft;
+
+        /// <summary>Where the coins of this seat appear.</summary>
+        public Vector3 CoinSpotPosition => coinSpot != null ? coinSpot.position : transform.position;
 
         public Customer Occupant { get; private set; }
         public bool IsFree => Occupant == null;
@@ -69,6 +74,7 @@ namespace Fonda
                 var offset = coinSpot.rotation * CoinOffsets[i % CoinOffsets.Length] + Vector3.up * 0.01f * (i / CoinOffsets.Length);
                 dropped.Add(Instantiate(coinPrefab, coinSpot.position + offset, coinSpot.rotation));
             }
+            if (dropped.Count > 0) TipLeft?.Invoke(this, dropped.Count);
             return dropped;
         }
 

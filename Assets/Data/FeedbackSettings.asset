@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5b075e2daea143028e560e6eca15a6e, type: 3}
+  m_Name: FeedbackSettings
+  m_EditorClassIdentifier: Fonda.Runtime::Fonda.FeedbackSettings
+  plop:
+    clips:
+    - {fileID: 8300000, guid: 50ca131cfb143438497c1363f3341a69, type: 3}
+    - {fileID: 8300000, guid: 5f3e48ff1c3fb447abdbd1d8042e73f9, type: 3}
+    - {fileID: 8300000, guid: 61616c000c427499ba60bc1456236210, type: 3}
+    volume: 0.8
+  bell:
+    clips:
+    - {fileID: 8300000, guid: a3621b841da9b4a249009e9eb6af3d27, type: 3}
+    volume: 0.8
+  wrong:
+    clips:
+    - {fileID: 8300000, guid: f78995456bf8c45d3afe3e4ac3292ca8, type: 3}
+    volume: 0.8
+  coinsLeft:
+    clips:
+    - {fileID: 8300000, guid: 648bbd05ec2364e858d8d8ed9922a3ab, type: 3}
+    volume: 0.8
+  coinBanked:
+    clips:
+    - {fileID: 8300000, guid: 17b0af649e05c4e31ab3cb7c775e921e, type: 3}
+    - {fileID: 8300000, guid: 7f31d627bb55d41de85bf26416b0a71d, type: 3}
+    - {fileID: 8300000, guid: 1f53a5b13aa8e4186b306db08eb68252, type: 3}
+    - {fileID: 8300000, guid: d3c3e64311e4d4f8c8f5d9b8e99ecb24, type: 3}
+    - {fileID: 8300000, guid: 08e5f3f9395be4324a157cf2e2062610, type: 3}
+    volume: 0.8
+  bellPitchStep: 0.08
+  bellMaxPitch: 1.5
+  minDistance: 0.5
+  maxDistance: 8
