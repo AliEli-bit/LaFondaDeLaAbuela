@@ -9,7 +9,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 namespace Fonda
 {
     /// <summary>
-    /// Tray with one socket per slot. Only as many slots as the active order has ingredients are enabled.
+    /// Tray with one socket per slot. Only as many slots as the active order has ingredients are enabled,
+    /// and the base of the order (bun or bowl) is shown under them without taking a slot.
     /// Every change is judged with <see cref="TrayRule"/>. A wrong ingredient is reported as soon as it
     /// enters and stays until the player removes it; a correct tray is delivered and emptied (A1).
     /// </summary>
@@ -18,6 +19,10 @@ namespace Fonda
         [SerializeField] RecipeData order;
         [Tooltip("One socket per slot; the first N are active for an order with N ingredients.")]
         [SerializeField] XRSocketInteractor[] slots;
+
+        [Header("Base (S8): shown for the active order, never counted as an ingredient")]
+        [SerializeField] GameObject bunBase;
+        [SerializeField] GameObject bowlBase;
 
         [Header("Feedback (A2)")]
         [SerializeField] Renderer flashRenderer;
@@ -54,7 +59,7 @@ namespace Fonda
             busy = false;
         }
 
-        /// <summary>Sets the active order (e.g. from a customer), emptying the tray and enabling N slots.</summary>
+        /// <summary>Sets the active order (e.g. from a customer), emptying the tray, showing its base and enabling N slots.</summary>
         public void SetOrder(RecipeData recipe)
         {
             order = recipe;
@@ -65,6 +70,8 @@ namespace Fonda
         void ApplyOrder()
         {
             int count = order != null ? order.Ingredients.Count : 0;
+            if (bunBase != null) bunBase.SetActive(order != null && order.Base == DishBase.Bun);
+            if (bowlBase != null) bowlBase.SetActive(order != null && order.Base == DishBase.Bowl);
             if (slots == null) return;
             if (count > slots.Length)
                 Debug.LogWarning("[Tray] Order needs " + count + " slots but the tray has " + slots.Length + ".", this);

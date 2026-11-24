@@ -6,8 +6,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using Fonda;
 
 /// <summary>
-/// Creates the core-loop content for the Fonda scene: ingredient/recipe data assets, ingredient prefabs,
-/// a tray with sockets and one dispenser per ingredient, all on the counter top.
+/// Creates the core-loop content for the Fonda scene: ingredient/recipe data assets for the menu in CLAUDE.md §5,
+/// ingredient prefabs, a tray with sockets and a dish base, and one dispenser per ingredient, all on the counter top.
 /// Called from <see cref="FondaSceneBuilder.Build"/>. Assets are created or updated in place (idempotent).
 /// </summary>
 public static class FondaCoreLoopBuilder
@@ -16,12 +16,12 @@ public static class FondaCoreLoopBuilder
     const string IngredientDataFolder = "Assets/Data/Ingredients";
     const string RecipeFolder = "Assets/Data/Recipes";
     const string PrefabFolder = "Assets/Prefabs/Ingredients";
-    const string RecipeAssetPath = RecipeFolder + "/ArrozConHuevo.asset";
+    const string StartingOrder = "Hamburguesa con queso"; // S5
 
     // ---- Layout (meters; x centered on the player, z measured from the player, y world) ----
     // Everything must stay on the counter top and within MaxReach horizontally of the origin.
     const float DispenserZ = 0.38f;
-    const float DispenserSpacing = 0.18f;
+    const float DispenserSpacing = 0.16f;    // GDD: centers about 0.16 m apart
     const float SlotZ = 0.55f;
     const float SlotSpacing = 0.15f;
     const int SlotCount = 3;                 // longest menu dish has 3 ingredients
@@ -37,18 +37,40 @@ public static class FondaCoreLoopBuilder
     class IngredientDef
     {
         public string Id, DisplayName;
+        public string FileName => DisplayName.Replace("ó", "o");
         public PrimitiveType Shape;
-        public Vector3 Scale;
+        public Vector3 Size;   // world size in meters (a cylinder primitive is 2 units tall, handled in the prefab)
         public Color Color;
     }
 
+    // Left to right as in the GDD station layout: lechuga, tomate, queso, medallón, lomito, papas.
+    // Placeholder primitives until the KayKit models are imported.
     static readonly IngredientDef[] Ingredients =
     {
-        new IngredientDef { Id = "arroz",    DisplayName = "Arroz",    Shape = PrimitiveType.Cylinder, Scale = new Vector3(0.08f, 0.025f, 0.08f), Color = new Color(0.95f, 0.95f, 0.88f) },
-        new IngredientDef { Id = "huevo",    DisplayName = "Huevo",    Shape = PrimitiveType.Sphere,   Scale = new Vector3(0.05f, 0.07f, 0.05f),  Color = new Color(1.00f, 0.90f, 0.45f) },
-        new IngredientDef { Id = "papa",     DisplayName = "Papa",     Shape = PrimitiveType.Sphere,   Scale = new Vector3(0.08f, 0.06f, 0.07f),  Color = new Color(0.60f, 0.45f, 0.25f) },
-        new IngredientDef { Id = "carne",    DisplayName = "Carne",    Shape = PrimitiveType.Cube,     Scale = new Vector3(0.08f, 0.04f, 0.06f),  Color = new Color(0.70f, 0.20f, 0.20f) },
-        new IngredientDef { Id = "ensalada", DisplayName = "Ensalada", Shape = PrimitiveType.Capsule,  Scale = new Vector3(0.05f, 0.04f, 0.05f),  Color = new Color(0.30f, 0.70f, 0.25f) },
+        new IngredientDef { Id = "lechuga",  DisplayName = "Lechuga",  Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.015f, 0.08f), Color = new Color(0.45f, 0.78f, 0.30f) },
+        new IngredientDef { Id = "tomate",   DisplayName = "Tomate",   Shape = PrimitiveType.Cylinder, Size = new Vector3(0.06f, 0.015f, 0.06f), Color = new Color(0.88f, 0.20f, 0.15f) },
+        new IngredientDef { Id = "queso",    DisplayName = "Queso",    Shape = PrimitiveType.Cube,     Size = new Vector3(0.07f, 0.012f, 0.07f), Color = new Color(1.00f, 0.80f, 0.20f) },
+        new IngredientDef { Id = "medallon", DisplayName = "Medallón", Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.02f, 0.08f),  Color = new Color(0.40f, 0.24f, 0.13f) },
+        new IngredientDef { Id = "lomito",   DisplayName = "Lomito",   Shape = PrimitiveType.Cube,     Size = new Vector3(0.08f, 0.025f, 0.05f), Color = new Color(0.65f, 0.30f, 0.22f) },
+        new IngredientDef { Id = "papas",    DisplayName = "Papas",    Shape = PrimitiveType.Cube,     Size = new Vector3(0.06f, 0.03f, 0.05f),  Color = new Color(0.96f, 0.86f, 0.52f) },
+    };
+
+    class RecipeDef
+    {
+        public string FileName, DisplayName;
+        public DishBase Base;
+        public string[] IngredientIds;
+    }
+
+    // The menu confirmed by the author (CLAUDE.md §5, "Menú").
+    static readonly RecipeDef[] Recipes =
+    {
+        new RecipeDef { FileName = "HamburguesaSola",     DisplayName = "Hamburguesa sola",      Base = DishBase.Bun,  IngredientIds = new[] { "medallon" } },
+        new RecipeDef { FileName = "TazonDePapas",        DisplayName = "Tazón de papas",        Base = DishBase.Bowl, IngredientIds = new[] { "papas" } },
+        new RecipeDef { FileName = "HamburguesaConQueso", DisplayName = "Hamburguesa con queso", Base = DishBase.Bun,  IngredientIds = new[] { "medallon", "queso" } },
+        new RecipeDef { FileName = "LomitoConTomate",     DisplayName = "Lomito con tomate",     Base = DishBase.Bun,  IngredientIds = new[] { "lomito", "tomate" } },
+        new RecipeDef { FileName = "HamburguesaCompleta", DisplayName = "Hamburguesa completa",  Base = DishBase.Bun,  IngredientIds = new[] { "medallon", "lechuga", "tomate" } },
+        new RecipeDef { FileName = "LomitoCompleto",      DisplayName = "Lomito completo",       Base = DishBase.Bun,  IngredientIds = new[] { "lomito", "queso", "tomate" } },
     };
 
     // ---- Layout math (S6) -----------------------------------------------------------------
@@ -108,8 +130,13 @@ public static class FondaCoreLoopBuilder
             prefabs[def.Id] = prefab;
         }
 
-        var recipe = CreateOrUpdateRecipe(new[] { data["arroz"], data["huevo"] });
-        BuildTray(root, recipe, errors);
+        RecipeData startingOrder = null;
+        foreach (var def in Recipes)
+        {
+            var recipe = CreateOrUpdateRecipe(def, data);
+            if (def.DisplayName == StartingOrder) startingOrder = recipe;
+        }
+        BuildTray(root, startingOrder, errors);
         BuildDispensers(root, prefabs);
         AssetDatabase.SaveAssets();
     }
@@ -118,7 +145,7 @@ public static class FondaCoreLoopBuilder
 
     static IngredientData CreateOrUpdateIngredientData(IngredientDef def)
     {
-        var path = IngredientDataFolder + "/" + def.DisplayName + ".asset";
+        var path = IngredientDataFolder + "/" + def.FileName + ".asset";
         var asset = AssetDatabase.LoadAssetAtPath<IngredientData>(path);
         if (asset == null)
         {
@@ -141,20 +168,22 @@ public static class FondaCoreLoopBuilder
         EditorUtility.SetDirty(asset);
     }
 
-    static RecipeData CreateOrUpdateRecipe(IngredientData[] required)
+    static RecipeData CreateOrUpdateRecipe(RecipeDef def, Dictionary<string, IngredientData> data)
     {
-        var asset = AssetDatabase.LoadAssetAtPath<RecipeData>(RecipeAssetPath);
+        var path = RecipeFolder + "/" + def.FileName + ".asset";
+        var asset = AssetDatabase.LoadAssetAtPath<RecipeData>(path);
         if (asset == null)
         {
             asset = ScriptableObject.CreateInstance<RecipeData>();
-            AssetDatabase.CreateAsset(asset, RecipeAssetPath);
+            AssetDatabase.CreateAsset(asset, path);
         }
         var so = new SerializedObject(asset);
-        so.FindProperty("displayName").stringValue = "Arroz con huevo";
+        so.FindProperty("displayName").stringValue = def.DisplayName;
+        so.FindProperty("dishBase").enumValueIndex = (int)def.Base;
         var list = so.FindProperty("ingredients");
-        list.arraySize = required.Length;
-        for (int i = 0; i < required.Length; i++)
-            list.GetArrayElementAtIndex(i).objectReferenceValue = required[i];
+        list.arraySize = def.IngredientIds.Length;
+        for (int i = 0; i < def.IngredientIds.Length; i++)
+            list.GetArrayElementAtIndex(i).objectReferenceValue = data[def.IngredientIds[i]];
         so.ApplyModifiedPropertiesWithoutUndo();
         EditorUtility.SetDirty(asset);
         return asset;
@@ -166,8 +195,16 @@ public static class FondaCoreLoopBuilder
     {
         var go = GameObject.CreatePrimitive(def.Shape);
         go.name = def.DisplayName;
-        go.transform.localScale = def.Scale;
+        bool cylinder = def.Shape == PrimitiveType.Cylinder;
+        go.transform.localScale = cylinder ? new Vector3(def.Size.x, def.Size.y / 2f, def.Size.z) : def.Size;
         go.GetComponent<Renderer>().sharedMaterial = FondaSceneBuilder.GetOrCreateMaterial("Ingredient_" + def.Id, def.Color);
+        if (cylinder)
+        {
+            // The cylinder primitive comes with a capsule collider, which on a flat disc becomes a ball that rolls
+            // off the counter. A box matching the disc keeps it lying flat.
+            Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.AddComponent<BoxCollider>().size = new Vector3(1f, 2f, 1f);
+        }
 
         var rb = go.AddComponent<Rigidbody>();
         rb.mass = 0.2f;
@@ -177,7 +214,7 @@ public static class FondaCoreLoopBuilder
         so.FindProperty("data").objectReferenceValue = data;
         so.ApplyModifiedPropertiesWithoutUndo();
 
-        var path = PrefabFolder + "/" + def.DisplayName + ".prefab";
+        var path = PrefabFolder + "/" + def.FileName + ".prefab";
         var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
         Object.DestroyImmediate(go);
         return prefab;
@@ -217,6 +254,9 @@ public static class FondaCoreLoopBuilder
 
             var socket = slotGo.AddComponent<XRSocketInteractor>();
             socket.showInteractableHoverMeshes = false;
+            var filter = slotGo.AddComponent<IngredientOnlySocketFilter>(); // S9: sauces never enter a slot
+            socket.startingHoverFilters.Add(filter);
+            socket.startingSelectFilters.Add(filter);
             slots[i] = socket;
 
             // Visual marker: a flat disc on the tray surface (no collider).
@@ -229,9 +269,18 @@ public static class FondaCoreLoopBuilder
             Object.DestroyImmediate(marker.GetComponent<Collider>());
         }
 
+        // S8: the dish base sits under the slots. Visual only (no collider), it is not an ingredient.
+        float baseLength = (SlotCount - 1) * SlotSpacing + 0.10f;
+        var bunBase = CreateBaseVisual(tray.transform, "BunBase", new Vector3(baseLength, 0.016f, 0.11f),
+            FondaSceneBuilder.GetOrCreateMaterial("DishBase_Bun", new Color(0.86f, 0.62f, 0.32f)));
+        var bowlBase = CreateBaseVisual(tray.transform, "BowlBase", new Vector3(baseLength, 0.03f, 0.13f),
+            FondaSceneBuilder.GetOrCreateMaterial("DishBase_Bowl", new Color(0.92f, 0.92f, 0.95f)));
+
         var trayComponent = tray.AddComponent<Tray>();
         var so = new SerializedObject(trayComponent);
         so.FindProperty("order").objectReferenceValue = recipe;
+        so.FindProperty("bunBase").objectReferenceValue = bunBase;
+        so.FindProperty("bowlBase").objectReferenceValue = bowlBase;
         so.FindProperty("flashRenderer").objectReferenceValue = baseRenderer;
         var slotsProp = so.FindProperty("slots");
         slotsProp.arraySize = slots.Length;
@@ -241,6 +290,19 @@ public static class FondaCoreLoopBuilder
 
         if (recipe == null || recipe.Ingredients.Count > SlotCount)
             errors.Add("Tray recipe is missing or needs more than " + SlotCount + " slots.");
+    }
+
+    static GameObject CreateBaseVisual(Transform tray, string name, Vector3 size, Material material)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        go.name = name;
+        go.transform.SetParent(tray, false);
+        go.transform.localScale = new Vector3(size.x, size.y / 2f, size.z); // cylinder primitive is 2 units tall
+        go.transform.localPosition = new Vector3(0f, TrayBaseHeight + size.y / 2f, 0f);
+        go.GetComponent<Renderer>().sharedMaterial = material;
+        Object.DestroyImmediate(go.GetComponent<Collider>());
+        go.SetActive(false);
+        return go;
     }
 
     // ---- Dispensers (S3) ------------------------------------------------------------------
@@ -253,7 +315,7 @@ public static class FondaCoreLoopBuilder
         for (int i = 0; i < Ingredients.Length; i++)
         {
             var def = Ingredients[i];
-            var go = new GameObject("Dispenser_" + def.DisplayName);
+            var go = new GameObject("Dispenser_" + def.FileName);
             go.transform.SetParent(root, false);
             go.transform.localPosition = new Vector3(DispenserXZ(i).x, top, DispenserXZ(i).y);
 
