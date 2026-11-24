@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -6,9 +8,9 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using Fonda;
 
 /// <summary>
-/// Creates the core-loop content for the Fonda scene: ingredient/recipe data assets for the menu in CLAUDE.md §5,
-/// ingredient prefabs, a tray with sockets and a dish base, and one dispenser per ingredient, all on the counter top.
-/// Called from <see cref="FondaSceneBuilder.Build"/>. Assets are created or updated in place (idempotent).
+/// Creates the gameplay content for the Fonda scene: ingredient/recipe data assets for the menu in CLAUDE.md §5,
+/// ingredient prefabs and dispensers on an arc of the curved bar, three seats with one tray each, a customer prefab
+/// and the customer spawner. Called from <see cref="FondaSceneBuilder.Build"/>. Assets are created or updated in place.
 /// </summary>
 public static class FondaCoreLoopBuilder
 {
@@ -16,43 +18,52 @@ public static class FondaCoreLoopBuilder
     const string IngredientDataFolder = "Assets/Data/Ingredients";
     const string RecipeFolder = "Assets/Data/Recipes";
     const string PrefabFolder = "Assets/Prefabs/Ingredients";
-    const string StartingOrder = "Hamburguesa con queso"; // S5
+    const string CustomerPrefabPath = "Assets/Prefabs/Customer.prefab";
 
-    // ---- Layout (meters; x centered on the player, z measured from the player, y world) ----
-    // Everything must stay on the counter top and within MaxReach horizontally of the origin.
-    const float DispenserZ = 0.38f;
-    const float DispenserSpacing = 0.16f;    // GDD: centers about 0.16 m apart
-    const float SlotZ = 0.55f;
-    const float SlotSpacing = 0.15f;
+    // ---- Layout (GDD §5 "Distribución de la estación"; meters, player at the origin facing +z,
+    //      angles in degrees measured from +z, negative to the left) --------------------------
+    const float DispenserRadius = 0.33f;
+    const float TrayRadius = 0.50f;
+    const float SeatRadius = 1.00f;
+    // Seats in the order they are offered to customers: center, left, right (A4).
+    static readonly float[] SeatAngles = { 0f, -40f, 40f };
+    static readonly string[] SeatNames = { "Center", "Left", "Right" };
+
+    const float SlotSpacing = 0.10f;         // along the tray, which faces the player
     const int SlotCount = 3;                 // longest menu dish has 3 ingredients
     const float MinDispenserToSlot = 0.15f;  // so a socket never grabs a resting ingredient
-    const float CounterTopMargin = 0.0f;
+    const float BarEdgeMargin = 0.05f;       // keep things off the bar edges
 
     const float PlateHeight = 0.01f;
     const float SpawnLift = 0.045f;          // spawn point above the counter top
     const float TrayBaseHeight = 0.02f;
+    const float TrayBaseDepth = 0.14f;
     const float SlotLift = 0.055f;           // socket center above the counter top
-    const float SocketRadius = 0.05f;
+    const float SocketRadius = 0.045f;
+
+    const float StoolHeight = 0.65f;
+    const float StoolRadius = 0.18f;
 
     class IngredientDef
     {
         public string Id, DisplayName;
         public string FileName => DisplayName.Replace("ó", "o");
+        public float Angle;    // position on the ingredient arc
         public PrimitiveType Shape;
         public Vector3 Size;   // world size in meters (a cylinder primitive is 2 units tall, handled in the prefab)
         public Color Color;
     }
 
-    // Left to right as in the GDD station layout: lechuga, tomate, queso, medallón, lomito, papas.
+    // Left to right as in the GDD: lechuga (−70°), tomate (−42°), queso (−14°), medallón (14°), lomito (42°), papas (70°).
     // Placeholder primitives until the KayKit models are imported.
     static readonly IngredientDef[] Ingredients =
     {
-        new IngredientDef { Id = "lechuga",  DisplayName = "Lechuga",  Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.015f, 0.08f), Color = new Color(0.45f, 0.78f, 0.30f) },
-        new IngredientDef { Id = "tomate",   DisplayName = "Tomate",   Shape = PrimitiveType.Cylinder, Size = new Vector3(0.06f, 0.015f, 0.06f), Color = new Color(0.88f, 0.20f, 0.15f) },
-        new IngredientDef { Id = "queso",    DisplayName = "Queso",    Shape = PrimitiveType.Cube,     Size = new Vector3(0.07f, 0.012f, 0.07f), Color = new Color(1.00f, 0.80f, 0.20f) },
-        new IngredientDef { Id = "medallon", DisplayName = "Medallón", Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.02f, 0.08f),  Color = new Color(0.40f, 0.24f, 0.13f) },
-        new IngredientDef { Id = "lomito",   DisplayName = "Lomito",   Shape = PrimitiveType.Cube,     Size = new Vector3(0.08f, 0.025f, 0.05f), Color = new Color(0.65f, 0.30f, 0.22f) },
-        new IngredientDef { Id = "papas",    DisplayName = "Papas",    Shape = PrimitiveType.Cube,     Size = new Vector3(0.06f, 0.03f, 0.05f),  Color = new Color(0.96f, 0.86f, 0.52f) },
+        new IngredientDef { Id = "lechuga",  DisplayName = "Lechuga",  Angle = -70f, Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.015f, 0.08f), Color = new Color(0.45f, 0.78f, 0.30f) },
+        new IngredientDef { Id = "tomate",   DisplayName = "Tomate",   Angle = -42f, Shape = PrimitiveType.Cylinder, Size = new Vector3(0.06f, 0.015f, 0.06f), Color = new Color(0.88f, 0.20f, 0.15f) },
+        new IngredientDef { Id = "queso",    DisplayName = "Queso",    Angle = -14f, Shape = PrimitiveType.Cube,     Size = new Vector3(0.07f, 0.012f, 0.07f), Color = new Color(1.00f, 0.80f, 0.20f) },
+        new IngredientDef { Id = "medallon", DisplayName = "Medallón", Angle =  14f, Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.02f, 0.08f),  Color = new Color(0.40f, 0.24f, 0.13f) },
+        new IngredientDef { Id = "lomito",   DisplayName = "Lomito",   Angle =  42f, Shape = PrimitiveType.Cube,     Size = new Vector3(0.08f, 0.025f, 0.05f), Color = new Color(0.65f, 0.30f, 0.22f) },
+        new IngredientDef { Id = "papas",    DisplayName = "Papas",    Angle =  70f, Shape = PrimitiveType.Cube,     Size = new Vector3(0.06f, 0.03f, 0.05f),  Color = new Color(0.96f, 0.86f, 0.52f) },
     };
 
     class RecipeDef
@@ -73,39 +84,66 @@ public static class FondaCoreLoopBuilder
         new RecipeDef { FileName = "LomitoCompleto",      DisplayName = "Lomito completo",       Base = DishBase.Bun,  IngredientIds = new[] { "lomito", "queso", "tomate" } },
     };
 
-    // ---- Layout math (S6) -----------------------------------------------------------------
+    // ---- Layout math (S1) -----------------------------------------------------------------
 
-    static Vector2 DispenserXZ(int i) => new Vector2((i - (Ingredients.Length - 1) / 2f) * DispenserSpacing, DispenserZ);
-    static Vector2 SlotXZ(int i) => new Vector2((i - (SlotCount - 1) / 2f) * SlotSpacing, SlotZ);
+    /// <summary>Point on the floor plane at <paramref name="radius"/> from the player and <paramref name="degrees"/> from +z.</summary>
+    public static Vector3 Polar(float radius, float degrees) =>
+        new Vector3(radius * Mathf.Sin(degrees * Mathf.Deg2Rad), 0f, radius * Mathf.Cos(degrees * Mathf.Deg2Rad));
+
+    /// <summary>Rotation whose forward points away from the player at that angle (its right runs along the arc).</summary>
+    static Quaternion Outward(float degrees) => Quaternion.Euler(0f, degrees, 0f);
+
+    public static Vector3 DispenserPosition(string id)
+    {
+        foreach (var def in Ingredients)
+            if (def.Id == id) return Polar(DispenserRadius, def.Angle);
+        throw new System.ArgumentException("Unknown ingredient " + id);
+    }
+
+    public static Vector3 TrayPosition(int seat) => Polar(TrayRadius, SeatAngles[seat]);
+    public static Vector3 SeatPosition(int seat) => Polar(SeatRadius, SeatAngles[seat]);
+
+    static Vector3 SlotPosition(int seat, int slot) =>
+        TrayPosition(seat) + Outward(SeatAngles[seat]) * new Vector3((slot - (SlotCount - 1) / 2f) * SlotSpacing, 0f, 0f);
 
     /// <summary>Returns every violated layout rule (empty when the layout is valid).</summary>
     public static List<string> ValidateLayout()
     {
         var problems = new List<string>();
-        var points = new List<(string name, Vector2 xz)>();
-        for (int i = 0; i < Ingredients.Length; i++) points.Add(("dispenser " + Ingredients[i].Id, DispenserXZ(i)));
-        for (int i = 0; i < SlotCount; i++) points.Add(("slot " + i, SlotXZ(i)));
+        var dispensers = new List<(string name, Vector3 p)>();
+        var slots = new List<(string name, Vector3 p)>();
+        foreach (var def in Ingredients) dispensers.Add(("dispenser " + def.Id, DispenserPosition(def.Id)));
+        for (int seat = 0; seat < SeatAngles.Length; seat++)
+            for (int s = 0; s < SlotCount; s++)
+                slots.Add(("seat " + SeatNames[seat] + " slot " + (s + 1), SlotPosition(seat, s)));
 
-        float minZ = FondaSceneBuilder.CounterFrontZ + CounterTopMargin;
-        float maxZ = FondaSceneBuilder.CounterFrontZ + FondaSceneBuilder.CounterDepth - CounterTopMargin;
-        float halfWidth = FondaSceneBuilder.CounterWidth / 2f;
-
-        foreach (var (name, xz) in points)
+        float maxReach = FondaSceneBuilder.MaxReach;
+        foreach (var (name, p) in dispensers.Concat(slots))
         {
+            var xz = new Vector2(p.x, p.z);
             float reach = xz.magnitude;
-            if (reach >= FondaSceneBuilder.MaxReach)
-                problems.Add(name + " is " + reach.ToString("F3") + " m from the player (limit " + FondaSceneBuilder.MaxReach + " m).");
-            if (Mathf.Abs(xz.x) > halfWidth || xz.y < minZ || xz.y > maxZ)
-                problems.Add(name + " at " + xz + " is outside the counter top.");
+            float angle = Mathf.Atan2(p.x, p.z) * Mathf.Rad2Deg;
+            if (reach >= maxReach)
+                problems.Add(name + " is " + reach.ToString("F3") + " m from the player (limit " + maxReach + " m).");
+            if (reach < FondaSceneBuilder.BarInnerRadius + BarEdgeMargin || reach > FondaSceneBuilder.BarOuterRadius - BarEdgeMargin ||
+                Mathf.Abs(angle) > FondaSceneBuilder.BarHalfAngle)
+                problems.Add(name + " at r " + reach.ToString("F3") + ", " + angle.ToString("F1") + "° is off the bar top.");
         }
 
-        for (int d = 0; d < Ingredients.Length; d++)
-            for (int s = 0; s < SlotCount; s++)
+        foreach (var (dName, d) in dispensers)
+            foreach (var (sName, s) in slots)
             {
-                float dist = Vector2.Distance(DispenserXZ(d), SlotXZ(s));
+                float dist = Vector3.Distance(d, s);
                 if (dist < MinDispenserToSlot)
-                    problems.Add("dispenser " + Ingredients[d].Id + " is only " + dist.ToString("F3") + " m from slot " + s +
-                                 " (minimum " + MinDispenserToSlot + " m).");
+                    problems.Add(dName + " is only " + dist.ToString("F3") + " m from " + sName + " (minimum " + MinDispenserToSlot + " m).");
+            }
+
+        for (int a = 0; a < slots.Count; a++)
+            for (int b = a + 1; b < slots.Count; b++)
+            {
+                float dist = Vector3.Distance(slots[a].p, slots[b].p);
+                if (dist < 2f * SocketRadius)
+                    problems.Add(slots[a].name + " and " + slots[b].name + " overlap (" + dist.ToString("F3") + " m apart).");
             }
         return problems;
     }
@@ -130,14 +168,14 @@ public static class FondaCoreLoopBuilder
             prefabs[def.Id] = prefab;
         }
 
-        RecipeData startingOrder = null;
-        foreach (var def in Recipes)
-        {
-            var recipe = CreateOrUpdateRecipe(def, data);
-            if (def.DisplayName == StartingOrder) startingOrder = recipe;
-        }
-        BuildTray(root, startingOrder, errors);
+        var menu = new List<RecipeData>();
+        foreach (var def in Recipes) menu.Add(CreateOrUpdateRecipe(def, data));
+
+        var seats = new BarSeat[SeatAngles.Length];
+        for (int i = 0; i < seats.Length; i++)
+            seats[i] = BuildSeat(root, i, BuildTray(root, i));
         BuildDispensers(root, prefabs);
+        BuildSpawner(root, BuildCustomerPrefab(), seats, menu, errors);
         AssetDatabase.SaveAssets();
     }
 
@@ -220,23 +258,24 @@ public static class FondaCoreLoopBuilder
         return prefab;
     }
 
-    // ---- Tray (S4, S5) --------------------------------------------------------------------
+    // ---- Trays (S2; core-loop S4, S8, S9) -------------------------------------------------
 
-    static void BuildTray(Transform root, RecipeData recipe, List<string> errors)
+    static Tray BuildTray(Transform root, int seat)
     {
         float top = FondaSceneBuilder.CounterHeight;
         var trayMat = FondaSceneBuilder.GetOrCreateMaterial("Tray", new Color(0.85f, 0.85f, 0.80f));
         var slotMat = FondaSceneBuilder.GetOrCreateMaterial("TraySlotMarker", new Color(0.40f, 0.40f, 0.45f));
 
-        var tray = new GameObject("Tray");
+        var tray = new GameObject("Tray " + SeatNames[seat]);
         tray.transform.SetParent(root, false);
-        tray.transform.localPosition = new Vector3(0f, top, SlotZ);
+        tray.transform.localPosition = TrayPosition(seat) + Vector3.up * top;
+        tray.transform.localRotation = Outward(SeatAngles[seat]); // slots run along the arc, facing the player
 
-        float baseWidth = (SlotCount - 1) * SlotSpacing + 0.18f;
+        float baseWidth = (SlotCount - 1) * SlotSpacing + 0.10f;
         var baseGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
         baseGo.name = "TrayBase";
         baseGo.transform.SetParent(tray.transform, false);
-        baseGo.transform.localScale = new Vector3(baseWidth, TrayBaseHeight, 0.2f);
+        baseGo.transform.localScale = new Vector3(baseWidth, TrayBaseHeight, TrayBaseDepth);
         baseGo.transform.localPosition = new Vector3(0f, TrayBaseHeight / 2f, 0f);
         var baseRenderer = baseGo.GetComponent<Renderer>();
         baseRenderer.sharedMaterial = trayMat;
@@ -246,7 +285,7 @@ public static class FondaCoreLoopBuilder
         {
             var slotGo = new GameObject("Slot " + (i + 1));
             slotGo.transform.SetParent(tray.transform, false);
-            slotGo.transform.localPosition = new Vector3(SlotXZ(i).x, SlotLift, 0f);
+            slotGo.transform.localPosition = new Vector3((i - (SlotCount - 1) / 2f) * SlotSpacing, SlotLift, 0f);
 
             var trigger = slotGo.AddComponent<SphereCollider>();
             trigger.isTrigger = true;
@@ -264,21 +303,21 @@ public static class FondaCoreLoopBuilder
             marker.name = "SlotMarker";
             marker.transform.SetParent(slotGo.transform, false);
             marker.transform.localPosition = new Vector3(0f, TrayBaseHeight - SlotLift + 0.002f, 0f);
-            marker.transform.localScale = new Vector3(0.09f, 0.002f, 0.09f);
+            marker.transform.localScale = new Vector3(0.08f, 0.002f, 0.08f);
             marker.GetComponent<Renderer>().sharedMaterial = slotMat;
             Object.DestroyImmediate(marker.GetComponent<Collider>());
         }
 
-        // S8: the dish base sits under the slots. Visual only (no collider), it is not an ingredient.
-        float baseLength = (SlotCount - 1) * SlotSpacing + 0.10f;
+        // The dish base sits under the slots. Visual only (no collider), it is not an ingredient.
+        float baseLength = (SlotCount - 1) * SlotSpacing + 0.08f;
         var bunBase = CreateBaseVisual(tray.transform, "BunBase", new Vector3(baseLength, 0.016f, 0.11f),
             FondaSceneBuilder.GetOrCreateMaterial("DishBase_Bun", new Color(0.86f, 0.62f, 0.32f)));
-        var bowlBase = CreateBaseVisual(tray.transform, "BowlBase", new Vector3(baseLength, 0.03f, 0.13f),
+        var bowlBase = CreateBaseVisual(tray.transform, "BowlBase", new Vector3(baseLength, 0.03f, 0.12f),
             FondaSceneBuilder.GetOrCreateMaterial("DishBase_Bowl", new Color(0.92f, 0.92f, 0.95f)));
 
         var trayComponent = tray.AddComponent<Tray>();
         var so = new SerializedObject(trayComponent);
-        so.FindProperty("order").objectReferenceValue = recipe;
+        so.FindProperty("order").objectReferenceValue = null; // closed until a customer sits down
         so.FindProperty("bunBase").objectReferenceValue = bunBase;
         so.FindProperty("bowlBase").objectReferenceValue = bowlBase;
         so.FindProperty("flashRenderer").objectReferenceValue = baseRenderer;
@@ -287,9 +326,7 @@ public static class FondaCoreLoopBuilder
         for (int i = 0; i < slots.Length; i++)
             slotsProp.GetArrayElementAtIndex(i).objectReferenceValue = slots[i];
         so.ApplyModifiedPropertiesWithoutUndo();
-
-        if (recipe == null || recipe.Ingredients.Count > SlotCount)
-            errors.Add("Tray recipe is missing or needs more than " + SlotCount + " slots.");
+        return trayComponent;
     }
 
     static GameObject CreateBaseVisual(Transform tray, string name, Vector3 size, Material material)
@@ -305,27 +342,27 @@ public static class FondaCoreLoopBuilder
         return go;
     }
 
-    // ---- Dispensers (S3) ------------------------------------------------------------------
+    // ---- Dispensers (core-loop S3) --------------------------------------------------------
 
     static void BuildDispensers(Transform root, Dictionary<string, GameObject> prefabs)
     {
         float top = FondaSceneBuilder.CounterHeight;
         var plateMat = FondaSceneBuilder.GetOrCreateMaterial("DispenserPlate", new Color(0.35f, 0.30f, 0.25f));
 
-        for (int i = 0; i < Ingredients.Length; i++)
+        foreach (var def in Ingredients)
         {
-            var def = Ingredients[i];
             var go = new GameObject("Dispenser_" + def.FileName);
             go.transform.SetParent(root, false);
-            go.transform.localPosition = new Vector3(DispenserXZ(i).x, top, DispenserXZ(i).y);
+            go.transform.localPosition = DispenserPosition(def.Id) + Vector3.up * top;
+            go.transform.localRotation = Outward(def.Angle);
 
             var plate = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             plate.name = "Plate";
             plate.transform.SetParent(go.transform, false);
             plate.transform.localPosition = new Vector3(0f, PlateHeight / 2f, 0f);
-            plate.transform.localScale = new Vector3(0.12f, PlateHeight / 2f, 0.12f); // cylinder height is 2 units
+            plate.transform.localScale = new Vector3(0.11f, PlateHeight / 2f, 0.11f); // cylinder height is 2 units
             plate.GetComponent<Renderer>().sharedMaterial = plateMat;
-            Object.DestroyImmediate(plate.GetComponent<Collider>()); // visual only; the counter is the support
+            Object.DestroyImmediate(plate.GetComponent<Collider>()); // visual only; the bar is the support
 
             var spawn = new GameObject("SpawnPoint").transform;
             spawn.SetParent(go.transform, false);
@@ -337,6 +374,117 @@ public static class FondaCoreLoopBuilder
             so.FindProperty("spawnPoint").objectReferenceValue = spawn;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
+    }
+
+    // ---- Seats (S2) -----------------------------------------------------------------------
+
+    static BarSeat BuildSeat(Transform root, int seat, Tray tray)
+    {
+        var stoolMat = FondaSceneBuilder.GetOrCreateMaterial("Stool", new Color(0.30f, 0.22f, 0.16f));
+
+        var go = new GameObject("Seat " + SeatNames[seat]);
+        go.transform.SetParent(root, false);
+        go.transform.localPosition = SeatPosition(seat);
+        go.transform.localRotation = Outward(SeatAngles[seat] + 180f); // faces the player
+
+        var stool = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        stool.name = "Stool";
+        stool.transform.SetParent(go.transform, false);
+        stool.transform.localScale = new Vector3(StoolRadius * 2f, StoolHeight / 2f, StoolRadius * 2f);
+        stool.transform.localPosition = new Vector3(0f, StoolHeight / 2f, 0f);
+        stool.GetComponent<Renderer>().sharedMaterial = stoolMat;
+        Object.DestroyImmediate(stool.GetComponent<Collider>()); // customers walk through it
+
+        var seatComponent = go.AddComponent<BarSeat>();
+        var so = new SerializedObject(seatComponent);
+        so.FindProperty("tray").objectReferenceValue = tray;
+        so.FindProperty("seatPoint").objectReferenceValue = go.transform;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        return seatComponent;
+    }
+
+    // ---- Customers (S3-S5) ----------------------------------------------------------------
+
+    /// <summary>Blockout customer (A1): body and head primitives, a mood disc and a speech bubble. No colliders.</summary>
+    static Customer BuildCustomerPrefab()
+    {
+        var skinMat = FondaSceneBuilder.GetOrCreateMaterial("CustomerSkin", new Color(0.87f, 0.68f, 0.52f));
+        var bodyMat = FondaSceneBuilder.GetOrCreateMaterial("CustomerBody", new Color(0.25f, 0.45f, 0.80f));
+        var faceMat = FondaSceneBuilder.GetOrCreateMaterial("CustomerMood", new Color(0.30f, 0.80f, 0.35f));
+        var bubbleMat = FondaSceneBuilder.GetOrCreateMaterial("SpeechBubble", Color.white);
+
+        var root = new GameObject("Customer");
+        var body = new GameObject("Body").transform;
+        body.SetParent(root.transform, false);
+
+        var torso = Part(PrimitiveType.Capsule, "Torso", body, new Vector3(0f, 0.75f, 0f), new Vector3(0.36f, 0.55f, 0.30f), bodyMat);
+        var head = Part(PrimitiveType.Sphere, "Head", body, new Vector3(0f, 1.45f, 0f), Vector3.one * 0.24f, skinMat);
+        // A nose so the facing direction and the head shake read from the bar.
+        Part(PrimitiveType.Sphere, "Nose", head.transform, new Vector3(0f, 0f, 0.5f), Vector3.one * 0.25f, skinMat);
+        var mood = Part(PrimitiveType.Sphere, "Mood", body, new Vector3(0f, 1.66f, 0f), Vector3.one * 0.08f, faceMat);
+
+        var bubbleGo = new GameObject("Bubble");
+        bubbleGo.transform.SetParent(body, false);
+        bubbleGo.transform.localPosition = new Vector3(0f, 1.88f, 0f);
+        var text = bubbleGo.AddComponent<TextMeshPro>();
+        text.rectTransform.sizeDelta = new Vector2(0.6f, 0.2f);
+        text.fontSize = 0.7f;
+        text.alignment = TextAlignmentOptions.Center;
+        text.color = new Color(0.15f, 0.12f, 0.10f);
+        text.text = "Pedido";
+        var back = Part(PrimitiveType.Quad, "Background", bubbleGo.transform, new Vector3(0f, 0f, 0.005f), new Vector3(0.64f, 0.22f, 1f), bubbleMat);
+        back.transform.localRotation = Quaternion.identity;
+
+        var customer = root.AddComponent<Customer>();
+        var so = new SerializedObject(customer);
+        so.FindProperty("body").objectReferenceValue = body;
+        so.FindProperty("head").objectReferenceValue = head.transform;
+        so.FindProperty("bodyRenderer").objectReferenceValue = torso.GetComponent<Renderer>();
+        so.FindProperty("faceRenderer").objectReferenceValue = mood.GetComponent<Renderer>();
+        so.FindProperty("bubble").objectReferenceValue = text;
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        EnsureFolderPath("Assets/Prefabs");
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, CustomerPrefabPath);
+        Object.DestroyImmediate(root);
+        return prefab.GetComponent<Customer>();
+    }
+
+    static GameObject Part(PrimitiveType type, string name, Transform parent, Vector3 localPosition, Vector3 localScale, Material mat)
+    {
+        var go = GameObject.CreatePrimitive(type);
+        go.name = name;
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localPosition;
+        go.transform.localScale = localScale;
+        go.GetComponent<Renderer>().sharedMaterial = mat;
+        Object.DestroyImmediate(go.GetComponent<Collider>());
+        return go;
+    }
+
+    static void BuildSpawner(Transform root, Customer prefab, BarSeat[] seats, List<RecipeData> menu, List<string> errors)
+    {
+        var door = new GameObject("Door").transform;
+        door.SetParent(root, false);
+        door.localPosition = new Vector3(FondaSceneBuilder.DoorCenterX, 0f, FondaSceneBuilder.BackWallZ - 0.2f);
+        door.localRotation = Quaternion.Euler(0f, 180f, 0f);
+
+        var go = new GameObject("CustomerSpawner");
+        go.transform.SetParent(root, false);
+        var spawner = go.AddComponent<CustomerSpawner>();
+        var so = new SerializedObject(spawner);
+        so.FindProperty("customerPrefab").objectReferenceValue = prefab;
+        so.FindProperty("door").objectReferenceValue = door;
+        var seatsProp = so.FindProperty("seats");
+        seatsProp.arraySize = seats.Length;
+        for (int i = 0; i < seats.Length; i++) seatsProp.GetArrayElementAtIndex(i).objectReferenceValue = seats[i];
+        var menuProp = so.FindProperty("menu");
+        menuProp.arraySize = menu.Count;
+        for (int i = 0; i < menu.Count; i++) menuProp.GetArrayElementAtIndex(i).objectReferenceValue = menu[i];
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        if (prefab == null) errors.Add("Customer prefab could not be saved at " + CustomerPrefabPath + ".");
+        if (menu.Count != Recipes.Length) errors.Add("Menu has " + menu.Count + " recipes, expected " + Recipes.Length + ".");
     }
 
     // ---- Helpers --------------------------------------------------------------------------

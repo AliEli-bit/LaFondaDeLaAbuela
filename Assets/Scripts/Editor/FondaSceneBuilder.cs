@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
 /// <summary>
-/// Builds the "Fonda" blockout scene: fixed XR rig facing a counter, no locomotion.
+/// Builds the "Fonda" blockout scene: fixed XR rig inside a curved bar, no locomotion, customers' wall behind the bar.
 /// Run from the menu: Tools/Fonda/Build Fonda Scene. Safe to re-run (asks before overwriting).
 /// All dimensions are in meters; the player origin is (0,0,0) facing +Z.
 /// </summary>
@@ -23,29 +23,24 @@ public static class FondaSceneBuilder
     // ---- Blockout dimensions (tune here) --------------------------------------------------
     const float FloorSize = 6f;
 
-    internal const float CounterWidth = 1.6f;   // x
-    internal const float CounterHeight = 0.9f;  // y
-    internal const float CounterDepth = 0.6f;   // z
-    internal const float CounterFrontZ = 0.3f;  // front edge (player side) distance from origin
-
-    const float WallZ = -1.0f;
-    const float WallWidth = 3f;
-    const float WallHeight = 2.5f;
-    const float WallThickness = 0.1f;
-
-    const float CustomerDistanceZ = 1.3f;
-    const float CustomerMarkerSize = 0.6f;
-
-    // Ingredient zone on the counter top (x centered on the player; z measured from the player).
-    // Reach check (S7, must stay < MaxReach horizontally from the origin):
-    //   farthest corner = (IngredientHalfWidth, IngredientFarZ) = (0.25, 0.5)
-    //   sqrt(0.25^2 + 0.5^2) = sqrt(0.3125) ~= 0.559 m < 0.6 m
-    const float IngredientHalfWidth = 0.25f;
-    const float IngredientNearZ = CounterFrontZ; // 0.3
-    const float IngredientFarZ = 0.5f;
+    // Curved bar around the player (GDD §5, "Distribución de la estación"): angles measured from +Z, left negative.
+    internal const float CounterHeight = 0.9f;
+    internal const float BarInnerRadius = 0.22f;
+    internal const float BarOuterRadius = 0.78f;
+    internal const float BarHalfAngle = 80f;
+    const int BarSegments = 32;
     internal const float MaxReach = 0.6f;
 
-    const float MarkerLift = 0.003f; // avoids z-fighting with the surface below
+    // Back wall behind the customers, with a door on the left.
+    internal const float BackWallZ = 2.40f;
+    const float WallWidth = 4f;
+    const float WallHeight = 2.6f;
+    const float WallThickness = 0.1f;
+    internal const float DoorCenterX = -1.0f;
+    const float DoorWidth = 0.9f;
+    const float DoorHeight = 2.1f;
+
+    const string MeshesFolder = "Assets/Meshes/Blockout";
 
     // Locomotion providers to deactivate under the "Locomotion" child of the rig (Gravity stays on).
     // "Climb Teleport" is a child of "Climb", so deactivating "Climb" covers it.
@@ -81,15 +76,6 @@ public static class FondaSceneBuilder
             return;
         }
 
-        var reach = Mathf.Sqrt(IngredientHalfWidth * IngredientHalfWidth + IngredientFarZ * IngredientFarZ);
-        if (reach >= MaxReach)
-        {
-            var msg = "La zona de ingredientes excede el alcance del brazo: " + reach.ToString("F3") + " m >= " + MaxReach + " m.";
-            Debug.LogError("[FondaSceneBuilder] " + msg);
-            EditorUtility.DisplayDialog("Fonda", msg, "OK");
-            return;
-        }
-
         var layoutProblems = FondaCoreLoopBuilder.ValidateLayout();
         if (layoutProblems.Count > 0)
         {
@@ -120,7 +106,6 @@ public static class FondaSceneBuilder
 
         Debug.Log("[FondaSceneBuilder] Scene " + (saved ? "saved: " : "NOT saved: ") + ScenePath +
                   "\n  rig prefab: " + rigPath +
-                  "\n  ingredient zone farthest point: " + reach.ToString("F3") + " m (limit " + MaxReach + " m)" +
                   "\n  build settings: " + ScenePath + " at index 0" +
                   "\n  errors: " + errors.Count);
 
@@ -240,62 +225,87 @@ public static class FondaSceneBuilder
         var floorMat = GetOrCreateMaterial("Floor", new Color(0.55f, 0.42f, 0.30f));
         var counterMat = GetOrCreateMaterial("Counter", new Color(0.72f, 0.52f, 0.30f));
         var wallMat = GetOrCreateMaterial("Wall", new Color(0.93f, 0.88f, 0.78f));
-        var customerMat = GetOrCreateMaterial("CustomerMarker", new Color(0.25f, 0.55f, 0.90f));
-        var ingredientMat = GetOrCreateMaterial("IngredientZoneMarker", new Color(0.30f, 0.75f, 0.35f));
 
         var root = new GameObject("Fonda").transform;
 
-        // Floor (keeps its collider).
         var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
         floor.name = "Floor";
         floor.transform.SetParent(root, false);
         floor.transform.localScale = new Vector3(FloorSize / 10f, 1f, FloorSize / 10f); // plane is 10x10 at scale 1
         floor.GetComponent<Renderer>().sharedMaterial = floorMat;
 
-        // Counter: front edge at z = CounterFrontZ, top at y = CounterHeight (keeps its collider).
-        var counter = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        counter.name = "Counter";
-        counter.transform.SetParent(root, false);
-        counter.transform.localScale = new Vector3(CounterWidth, CounterHeight, CounterDepth);
-        counter.transform.localPosition = new Vector3(0f, CounterHeight / 2f, CounterFrontZ + CounterDepth / 2f);
-        counter.GetComponent<Renderer>().sharedMaterial = counterMat;
+        // Curved bar: a solid arc whose top is the work surface (ingredients rest on its collider).
+        var bar = new GameObject("Bar");
+        bar.transform.SetParent(root, false);
+        var mesh = GetOrCreateArcMesh("FondaBar", BarInnerRadius, BarOuterRadius, BarHalfAngle, CounterHeight, BarSegments);
+        bar.AddComponent<MeshFilter>().sharedMesh = mesh;
+        bar.AddComponent<MeshRenderer>().sharedMaterial = counterMat;
+        bar.AddComponent<MeshCollider>().sharedMesh = mesh;
 
-        // Back wall behind the player.
-        var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        wall.name = "BackWall";
-        wall.transform.SetParent(root, false);
-        wall.transform.localScale = new Vector3(WallWidth, WallHeight, WallThickness);
-        wall.transform.localPosition = new Vector3(0f, WallHeight / 2f, WallZ - WallThickness / 2f);
-        wall.GetComponent<Renderer>().sharedMaterial = wallMat;
-
-        // Customer spot: empty anchor + flat marker on the floor.
-        var customerSpot = new GameObject("CustomerSpot").transform;
-        customerSpot.SetParent(root, false);
-        customerSpot.localPosition = new Vector3(0f, 0f, CustomerDistanceZ);
-        CreateFlatMarker("CustomerSpotMarker", customerSpot, Vector3.up * MarkerLift,
-                         new Vector2(CustomerMarkerSize, CustomerMarkerSize), customerMat);
-
-        // Ingredient zone: empty anchor at the zone center on the counter top + flat marker.
-        float zoneCenterZ = (IngredientNearZ + IngredientFarZ) / 2f;
-        var zone = new GameObject("IngredientZone").transform;
-        zone.SetParent(root, false);
-        zone.localPosition = new Vector3(0f, CounterHeight, zoneCenterZ);
-        CreateFlatMarker("IngredientZoneMarker", zone, Vector3.up * MarkerLift,
-                         new Vector2(IngredientHalfWidth * 2f, IngredientFarZ - IngredientNearZ), ingredientMat);
+        // Back wall with a door gap on the left: two side panels and a lintel.
+        var wall = new GameObject("BackWall").transform;
+        wall.SetParent(root, false);
+        float left = -WallWidth / 2f, right = WallWidth / 2f;
+        float doorLeft = DoorCenterX - DoorWidth / 2f, doorRight = DoorCenterX + DoorWidth / 2f;
+        WallPanel(wall, "WallLeft", left, doorLeft, 0f, WallHeight, wallMat);
+        WallPanel(wall, "WallRight", doorRight, right, 0f, WallHeight, wallMat);
+        WallPanel(wall, "Lintel", doorLeft, doorRight, DoorHeight, WallHeight, wallMat);
 
         return root;
     }
 
-    static void CreateFlatMarker(string name, Transform parent, Vector3 localOffset, Vector2 sizeXZ, Material mat)
+    static void WallPanel(Transform parent, string name, float x0, float x1, float y0, float y1, Material mat)
     {
-        var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        quad.name = name;
-        quad.transform.SetParent(parent, false);
-        quad.transform.localPosition = localOffset;
-        quad.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); // lay the quad flat, facing up
-        quad.transform.localScale = new Vector3(sizeXZ.x, sizeXZ.y, 1f);
-        quad.GetComponent<Renderer>().sharedMaterial = mat;
-        UnityEngine.Object.DestroyImmediate(quad.GetComponent<Collider>()); // markers are visual only
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = name;
+        go.transform.SetParent(parent, false);
+        go.transform.localScale = new Vector3(x1 - x0, y1 - y0, WallThickness);
+        go.transform.localPosition = new Vector3((x0 + x1) / 2f, (y0 + y1) / 2f, BackWallZ + WallThickness / 2f);
+        go.GetComponent<Renderer>().sharedMaterial = mat;
+    }
+
+    /// <summary>Closed arc solid (top, outer and inner faces, end caps) saved as an asset so the scene can reference it.</summary>
+    static Mesh GetOrCreateArcMesh(string name, float rIn, float rOut, float halfAngle, float height, int segments)
+    {
+        var verts = new List<Vector3>();
+        var tris = new List<int>();
+        Vector3 P(float r, float deg, float y) =>
+            new Vector3(r * Mathf.Sin(deg * Mathf.Deg2Rad), y, r * Mathf.Cos(deg * Mathf.Deg2Rad));
+        void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+        {
+            // a-b-c-d in clockwise order as seen from the outside (Unity front faces are clockwise).
+            int i = verts.Count;
+            verts.Add(a); verts.Add(b); verts.Add(c); verts.Add(d);
+            tris.AddRange(new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
+        }
+
+        for (int s = 0; s < segments; s++)
+        {
+            float a0 = Mathf.Lerp(-halfAngle, halfAngle, s / (float)segments);
+            float a1 = Mathf.Lerp(-halfAngle, halfAngle, (s + 1) / (float)segments);
+            Quad(P(rIn, a0, height), P(rOut, a0, height), P(rOut, a1, height), P(rIn, a1, height)); // top
+            Quad(P(rOut, a0, 0f), P(rOut, a1, 0f), P(rOut, a1, height), P(rOut, a0, height));       // outer
+            Quad(P(rIn, a1, 0f), P(rIn, a0, 0f), P(rIn, a0, height), P(rIn, a1, height));           // inner
+        }
+        Quad(P(rIn, -halfAngle, 0f), P(rOut, -halfAngle, 0f), P(rOut, -halfAngle, height), P(rIn, -halfAngle, height)); // left cap
+        Quad(P(rOut, halfAngle, 0f), P(rIn, halfAngle, 0f), P(rIn, halfAngle, height), P(rOut, halfAngle, height));     // right cap
+
+        EnsureFolder("Assets", "Meshes");
+        EnsureFolder("Assets/Meshes", "Blockout");
+        var path = MeshesFolder + "/" + name + ".asset";
+        var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+        if (mesh == null)
+        {
+            mesh = new Mesh { name = name };
+            AssetDatabase.CreateAsset(mesh, path);
+        }
+        mesh.Clear();
+        mesh.SetVertices(verts);
+        mesh.SetTriangles(tris, 0);
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+        EditorUtility.SetDirty(mesh);
+        return mesh;
     }
 
     // ---- Materials (A3) -------------------------------------------------------------------
