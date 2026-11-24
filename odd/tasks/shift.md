@@ -25,10 +25,10 @@ Rama: `feat/shift` (desde `feat/tips`, sin pushear). Entrega: `single-pr` (como 
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S2, S3, S4, S5, A1, A3, A4 | inline por el padre (sin razón de escritor): `DifficultySettings` (fórmulas, escenas, máximos, hora), `ShiftClock`, `ClockHands`, `MenuRule`, `ShiftSummary`, `TipJar.BankLeftovers`, tests RED antes | hecho: RED 21 (20 `NotImplementedException` + 1 posición en cero), GREEN 67/67 | C1 |
-| T2 | S1, S3, S4, A2 | inline: `FondaClock`, `ShiftManager`, `CustomerSpawner` con el reloj | hecho: prueba en Play (L4) | C1 |
-| T3 | S1, S5, A5, A7 | inline: builder del reloj de pared, cartel del resumen y asset de dificultad | hecho: builder `errors: 0` | C1, C2 |
-| T4 | S6 | padre en el editor abierto vía computer-use (batch bloqueado: Unity abierto): tests, builder, prueba en Play con test PlayMode temporal | hecho: 67/67, prueba en Play (L4); falta prueba a mano | C2 |
+| T1 | S2, S3, S4, S5, A1, A3, A4 | inline por el padre (sin razón de escritor): `DifficultySettings` (fórmulas, escenas, máximos, hora), `ShiftClock`, `ClockHands`, `MenuRule`, `ShiftSummary`, `TipJar.BankLeftovers`, tests RED antes | hecho: RED 21 (20 `NotImplementedException` + 1 posición en cero), GREEN 67/67 | 7e134d1 |
+| T2 | S1, S3, S4, A2 | inline: `FondaClock`, `ShiftManager`, `CustomerSpawner` con el reloj | hecho: prueba en Play (L4) | 7e134d1 |
+| T3 | S1, S5, A5, A7 | inline: builder del reloj de pared, cartel del resumen y asset de dificultad | hecho: builder `errors: 0` | 7e134d1, 8563a5e |
+| T4 | S6 | padre en el editor abierto vía computer-use (batch bloqueado: Unity abierto): tests, builder, prueba en Play con test PlayMode temporal | hecho: 67/67, prueba en Play (L4); falta prueba a mano | 8563a5e |
 
 ## Log
 
@@ -37,3 +37,4 @@ Rama: `feat/shift` (desde `feat/tips`, sin pushear). Entrega: `single-pr` (como 
 - **L3 (2026-11-23, GREEN y decisiones):** 67/67 EditMode. El reloj de pared va en x = 0,6 (a la derecha del asiento del centro, lejos de la puerta) y su posición sale de la pared del fondo del builder, así que se mueve con ella. El spawner ya no tiene valores fijos: lee todo de `FondaClock.Settings` y avisa con `CustomerLeft` cuando un cliente sale por la puerta. `ShiftManager` cierra cuando terminó el tiempo y no queda nadie; las monedas sin recoger se cobran con `TipJar.BankLeftovers`.
 - **L4 (2026-11-23, prueba en Play):** test PlayMode temporal sobre `Fonda` a velocidad ×10, sin atender a nadie salvo al primero (servido por código). Al empezar, la aguja de la hora apunta a las 3 y la del minutero a las 12; en t = 0,5, la hora entre las 5 y las 6 y el minutero a las 6 (17:30). Llegaron 32 clientes: con 1 ingrediente hasta t ≈ 0,21, con 2 desde t = 0,26 y con 3 desde t = 0,76; paciencia de 24,94 a 15,05 s, igual a `25 − 10·t` en cada llegada; 0 pedidos fuera de la fórmula. Máximo a la vez: 1 en la Escena 1, 2 en la 2, 3 en la 3. Cambios de escena a los 60 y 240 s; a los 330 s "Se terminó el tiempo", 0 llegadas después. Los 3 clientes sentados se fueron enojados y a los 347,7 s apareció el resumen: "¡Se terminó el turno! / Clientes atendidos: 1 / Se fueron enojados: 31 / Propinas: $3 / ($3 sumadas de la barra)"; el frasco quedó en $3 y sin monedas en la barra. Sin excepciones. Scripts temporales borrados. Pendiente: prueba a mano con el simulador.
 - **L5 (2026-11-23, contexto):** mientras tanto, el autor cambió en `CLAUDE.md` (sin commitear, otra sesión) la estación a una barra recta con la pared del fondo en z = 3,60. Esta feature no toca el layout; el reloj sigue a la pared del builder (hoy z = 2,40) y se moverá con ella cuando se adapte la barra.
+- **L6 (2026-11-23, entrega):** commits `7e134d1` (reglas, reloj, turno, spawner, frasco, builder y tests) y `8563a5e` (escena, asset de dificultad, materiales y documento). Sin push.
