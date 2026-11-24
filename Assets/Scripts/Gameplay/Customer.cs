@@ -21,6 +21,15 @@ namespace Fonda
         [SerializeField] TextMeshPro bubble;
         [Tooltip("Blender characters in FondaCoreLoopBuilder.CustomerTypes order; the profile picks one, or one at random. Empty: the blockout parts above are used.")]
         [SerializeField] CustomerLook[] looks = Array.Empty<CustomerLook>();
+        [Tooltip("The customer's body for physics: thrown ingredients and coins bump into it. Fitted to the look.")]
+        [SerializeField] CapsuleCollider hitBox;
+        [SerializeField, Min(0.05f)] float hitRadius = 0.22f;
+
+        /// <summary>The collider thrown things hit; it follows the body and fits the look's height.</summary>
+        public CapsuleCollider HitBox => hitBox;
+
+        // Height of the hit box when there is no Blender look (the capsule fallback figure).
+        const float FallbackHeight = 1.7f;
 
         [Header("Motion")]
         [SerializeField] float walkSpeed = 1.0f;
@@ -218,6 +227,12 @@ namespace Fonda
         void PickLook()
         {
             look = null;
+            ChooseLook();
+            FitHitBox();
+        }
+
+        void ChooseLook()
+        {
             if (looks == null || looks.Length == 0) return;
             int index = Profile != null ? Profile.LookIndex : -1;
             look = index >= 0 && index < looks.Length ? looks[index] : looks[UnityEngine.Random.Range(0, looks.Length)];
@@ -229,6 +244,17 @@ namespace Fonda
                 var p = bubble.transform.localPosition;
                 bubble.transform.localPosition = new Vector3(p.x, look.Height + bubbleGap, p.z);
             }
+        }
+
+        /// <summary>Fits the hit box to the look's height so a short child and a tall worker are hit where they are.</summary>
+        void FitHitBox()
+        {
+            if (hitBox == null) return;
+            float height = look != null ? look.Height : FallbackHeight;
+            hitBox.direction = 1; // along the body's up
+            hitBox.height = height;
+            hitBox.radius = Mathf.Min(hitRadius, height / 2f);
+            hitBox.center = new Vector3(0f, height / 2f, 0f);
         }
 
         void UpdateFace()
