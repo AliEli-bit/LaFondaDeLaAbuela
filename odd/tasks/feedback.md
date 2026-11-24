@@ -25,10 +25,10 @@ Rama: `feat/feedback` (desde `main` en 61ee03c). Entrega: `single-pr` (pronósti
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S1, S3, S4, S5, A1–A3, A5 | inline (sin razón de escritor): `FeedbackSettings`, `FeedbackRule` (tono, variante), `FeedbackManager` (voces 3D), eventos nuevos en `Tray`, `BarSeat` y `ShiftManager`, tests RED antes | hecho: RED 10 de 10, GREEN 186/186 | ver L6 |
-| T2 | S2, A4 | inline: el builder de la escena activa la vibración al soltar del rig | hecho: 6 `SimpleHapticFeedback` del rig con soltar activado | ver L6 |
-| T3 | S5, S6, A6 | inline: clips en `Assets/ThirdParty/Kenney_Audio/`, builder crea `FeedbackSettings` y el `FeedbackManager`, `CREDITS.md` | hecho: escena con 0 errores, 11 clips en el asset | ver L6 |
-| T4 | todos | padre en el editor abierto vía computer-use: tests y prueba en Play | hecho (L5); falta prueba a mano y en el visor | ver L6 |
+| T1 | S1, S3, S4, S5, A1–A3, A5 | inline (sin razón de escritor): `FeedbackSettings`, `FeedbackRule` (tono, variante), `FeedbackManager` (voces 3D), eventos nuevos en `Tray`, `BarSeat` y `ShiftManager`, tests RED antes | hecho: RED 10 de 10, GREEN 186/186 | 502e72c |
+| T2 | S2, A4 | inline: el builder de la escena activa la vibración al soltar del rig | hecho: 6 `SimpleHapticFeedback` del rig con soltar activado | 502e72c |
+| T3 | S5, S6, A6 | inline: clips en `Assets/ThirdParty/Kenney_Audio/`, builder crea `FeedbackSettings` y el `FeedbackManager`, `CREDITS.md` | hecho: escena con 0 errores, 11 clips en el asset | 502e72c |
+| T4 | todos | padre en el editor abierto vía computer-use: tests y prueba en Play | hecho (L5); falta prueba a mano y en el visor | 502e72c |
 
 ## Log
 
@@ -37,4 +37,4 @@ Rama: `feat/feedback` (desde `main` en 61ee03c). Entrega: `single-pr` (pronósti
 - **L3 (2026-11-24, RED):** `FeedbackTests` (10 casos): fallaron los 10 (9 con `NotImplementedException`, `DefaultClips_AreInTheProject` con la tabla vacía); los 176 anteriores pasaron.
 - **L4 (2026-11-24, GREEN):** 186/186 EditMode. Escena `Fonda` reconstruida desde el menú: errores 0. Los 6 `SimpleHapticFeedback` del rig quedan con `m_PlaySelectExited: 1` como override de la escena; `Assets/Data/FeedbackSettings.asset` con 11 clips.
 - **L5 (2026-11-24, prueba en Play):** test PlayMode temporal sobre `Fonda`, turno completo a ×10, ingredientes puestos por código en las ranuras (1 de cada 3 con un ingrediente equivocado antes, 1 de cada 4 clientes sin atender) y la mitad de las monedas al frasco. Turno cerrado, 0 errores. Plop 62 (= 62 ingredientes puestos), error 9 (= 9 equivocados), campanita 29 (= 29 entregas), monedas 29, frasco 44 (43 a mano + 1 al cierre). Tono de la campanita por combo: ×1 1,00, ×2 1,08, ×3 1,16, ×4 1,24. Un primer intento no corrió ningún test: el asmdef temporal era solo de editor. Scripts temporales borrados. Pendiente: escuchar los sonidos a mano en el simulador y sentir la vibración en el visor (el simulador no vibra).
-- **L6 (2026-11-24, entrega):** commit de la feature en `feat/feedback`. Sin push.
+- **L6 (2026-11-24, entrega):** commit `502e72c` en `feat/feedback` (código, tests, sonidos, asset, escena, créditos y documento). Sin push. `.vscode/settings.json` (lo reescribe Unity) no se commiteó.
