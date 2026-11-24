@@ -73,6 +73,34 @@ Implementar de forma **parametrizable** (ScriptableObjects o campos serializados
 - Si el jugador no recoge las monedas, quedan en la barra sin castigo y se suman solas al final del turno (propuesto). En la hora pico se vuelve una decisión: cobrar ahora o seguir cocinando.
 - **Tirar la propina:** el jugador puede tirarle cualquier moneda al cliente. El cliente reacciona de forma cómica (se agacha, se ofende) y la abuela refunfuña (*"¡y encima tacaño!"*). El único efecto es que esa plata se pierde: tirar una propina nunca da nada a cambio, para que siga siendo un gesto y no un truco.
 
+**Salsas (fuera de los pedidos, confirmado por el autor):**
+- Una botella de kétchup y una de mostaza (KayKit `ketchup` y `mustard`) en la barra. No forman parte de ningún pedido.
+- El jugador agarra la botella y aprieta el gatillo (evento `activated` de XRI): sale un chorro con sonido "splurt" y deja una mancha donde cae.
+- El jugador la usa como quiera: sobre el plato, la barra o un comensal. El juego no lo limita.
+- En la bandeja la salsa no cuenta como ingrediente ni como error.
+- Si el chorro le cae a un comensal, este reacciona según su tipo (ver "Tipos de cliente"). La abuela responde pícara, nunca humillante: *"¡pa' que aprenda!"* si el cliente dejó mala propina, *"¡ay, se me resbaló!"* si no.
+- **Afecta según el tipo de cliente** (confirmado por el autor). Así se vuelve una decisión: a quién sí y a quién no. Valores iniciales propuestos:
+  - **Le gusta:** +20 % de paciencia (sin pasar del máximo) y propina ×1,25. El combo sigue.
+  - **Le da igual:** sin efecto, solo la reacción.
+  - **Le molesta:** −20 % de paciencia, propina ×0,75 y el combo se reinicia. Al tacaño le molesta el doble (−40 %, ×0,5).
+- Solo cuenta el primer chorro que recibe cada cliente; los siguientes son solo reacción. Así no se puede exprimir la propina del turista.
+- Las botellas no se acaban. Si se caen, vuelven solas a su lugar, igual que los ingredientes.
+
+**Tipos de cliente (todo tipo de gente):**
+- **Variedad visual:** niños, jóvenes, adultos y abuelitos, con distintas alturas, contexturas, tonos de piel, ropa y accesorios (sombrero, gorra, lentes, casco de obra, audífonos, maletín). Salen todos de la misma figura simple (cuerpo y cabeza), cambiando tamaño, color y accesorio, así que son baratos en el Quest.
+- **Comportamiento:** cada tipo es un `CustomerProfile` (ScriptableObject) con multiplicador de paciencia, platos favoritos, multiplicador de propina, tiempo comiendo, reacción a la salsa y frases. Valores iniciales propuestos:
+
+| Tipo | Paciencia | Pide | Propina | Si le cae salsa | Efecto de la salsa |
+|---|---|---|---|---|---|
+| Oficinista apurado | ×0,7 | cualquiera | buena si es rápido | mira el reloj y se limpia a toda prisa | le molesta |
+| Abuelito paciente | ×1,5 | hamburguesa sola, tazón de papas | normal | se ríe y dice *"¡igualita que antes, doña!"* | le da igual |
+| Niño | ×1,0 | siempre tazón de papas | monedas chicas | se ríe a carcajadas | le gusta |
+| Habitual | ×1,0 | *"lo de siempre"* (sin globo; la abuela da la pista) | buena | se hace el ofendido y después se ríe | le da igual |
+| Trabajador de obra | ×1,0 | platos completos | generosa | se limpia con la manga y sigue esperando | le molesta |
+| Estudiante | ×1,2 | hamburguesa sola, tazón de papas | chica | saca una foto de la mancha | le da igual |
+| Turista | ×1,3 | cualquiera; se queda más tiempo comiendo porque le saca foto al plato | variable | aplaude, cree que es parte del show | le gusta |
+| Tacaño | ×1,0 | cualquiera | la peor | se ofende muchísimo | le molesta el doble |
+
 **La voz de la abuela** (son solo audios, sin animación):
 - Lee los pedidos en voz baja (*"a ver… lomito con tomate"*).
 - Celebra los combos (*"¡eso, todavía tengo mano!"*) y se alegra al cobrar.
@@ -86,7 +114,7 @@ Implementar de forma **parametrizable** (ScriptableObjects o campos serializados
 2. Lanzar ingredientes a la bandeja (`throwOnDetach`). Si falla, cae y el dispensador repone; solo cuesta tiempo.
 3. Combo de rapidez en todo el turno: cada entrega rápida seguida sube el tono de la campanita y la propina; un error reinicia el combo sin otra penalización.
 4. Frasco de propinas en la barra que se llena de monedas; lo llena el jugador con la mano (ver "Propinas en mano").
-5. Tipos de cliente: apurado (menos paciencia), abuelito paciente, niño que siempre pide tazón de papas, habitual que pide *"lo de siempre"* sin mostrar el globo.
+5. Todo tipo de clientes, cada uno con su paciencia, sus platos y su reacción (ver "Tipos de cliente").
 
 **Distribución de la estación** (concepto v5, barra curva; medidas en metros, jugador en el origen mirando hacia +z, ángulos medidos desde +z):
 - Barra curva alrededor del jugador: arco de −80° a +80°, radios de 0,22 a 0,78, alto 0,90. Una barra recta no sirve: con 3 asientos bien separados, las bandejas de los lados quedarían a ~0,72, fuera de alcance.
@@ -96,6 +124,7 @@ Implementar de forma **parametrizable** (ScriptableObjects o campos serializados
 - Pared del fondo detrás de los clientes (z = 2,40), con puerta a la izquierda y el reloj a 2,20 de alto.
 - Frasco de propinas en el extremo derecho de la barra (78°, a 0,45), al alcance de la mano. Las monedas aparecen junto a la bandeja de cada asiento, a ~0,50.
 - Cuaderno de recetas en el extremo izquierdo de la barra (−65°, a 0,65), fuera de alcance a propósito: solo se lee.
+- Botellas de salsa en el extremo izquierdo de la barra, una al lado de la otra (−76°, a 0,50), al alcance de la mano.
 
 **Dirección de arte (confirmada por el autor):**
 - Estilo **low-poly de color plano**, con iluminación cálida precalculada y sin sombras en tiempo real. Un solo detalle con textura para darle identidad (por ejemplo, un mantel o un textil; motivo por definir).
@@ -150,6 +179,8 @@ Modelos de KayKit Restaurant Bits: medallón = `food_ingredient_burger_cooked`, 
 - Probar en el visor que las bandejas de los lados (a 40°) se alcanzan cómodo sin moverse del lugar.
 - Tiempo que el cliente se queda comiendo antes de liberar el asiento.
 - Si la paciencia del cliente que espera de pie corre o no.
+- Valores finales de cada tipo de cliente y con qué frecuencia aparece cada uno.
+- Probar en el visor que las botellas de salsa (−76°, a 0,50) se alcanzan cómodo.
 
 ## 7. Arquitectura sugerida (scripts a crear)
 Carpeta `Assets/Scripts/`:
@@ -162,7 +193,9 @@ Carpeta `Assets/Scripts/`:
 | `IngredientDispenser` | repone una copia cuando se agarra el ingrediente (escucha `selectExited`/`selectEntered`) |
 | `Tray` | gestiona sockets; pertenece a un asiento; al entrar/salir ingredientes compara contra el pedido del cliente sentado; emite evento de plato correcto/incorrecto |
 | `BarSeat` | asiento de la barra: cliente sentado y su bandeja; avisa cuando queda libre |
-| `Customer` | pedido asignado, barra de paciencia, estado de carita, entrada, espera, asiento y salida |
+| `CustomerProfile` (ScriptableObject) | tipo de cliente: aspecto, multiplicadores de paciencia y propina, platos favoritos, tiempo comiendo, reacción y efecto de la salsa (le gusta, le da igual, le molesta) y frases |
+| `Customer` | pedido asignado, perfil, barra de paciencia, estado de carita, entrada, espera, asiento y salida; reacciona si le cae salsa o una moneda |
+| `SauceBottle` | botella agarrable; al apretar el gatillo lanza el chorro, deja la mancha y avisa al cliente que golpea; vuelve a su lugar si se cae |
 | `CustomerSpawner` | genera clientes según el Reloj y el máximo simultáneo; los sienta en el primer asiento libre o los deja esperando de pie |
 | `GrandmaVoice` | frases de la abuela según eventos: pedido nuevo, combo, cobro, propina tirada, pista de *"lo de siempre"* |
 | `RecipeBook` | cuaderno de recetas: muestra el paso del tutorial y después el menú |
