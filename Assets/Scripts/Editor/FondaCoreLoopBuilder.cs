@@ -722,8 +722,20 @@ public static class FondaCoreLoopBuilder
     static Customer SaveCustomerPrefab(GameObject root, Transform body, Transform head, Renderer bodyRenderer,
         Renderer faceRenderer, List<CustomerLook> looks, TextMeshPro bubble)
     {
+        // Thrown things bump into the customer: a collider on the body (it follows the sitting pose) and a kinematic
+        // rigidbody, because the customer is moved by code and a hit must never push it.
+        var rigidbody = root.AddComponent<Rigidbody>();
+        rigidbody.isKinematic = true;
+        rigidbody.useGravity = false;
+        var hitBox = body.gameObject.AddComponent<CapsuleCollider>();
+        hitBox.direction = 1;
+        hitBox.height = 1.4f;
+        hitBox.radius = 0.22f;
+        hitBox.center = new Vector3(0f, 0.7f, 0f);
+
         var customer = root.AddComponent<Customer>();
         var so = new SerializedObject(customer);
+        so.FindProperty("hitBox").objectReferenceValue = hitBox;
         so.FindProperty("body").objectReferenceValue = body;
         so.FindProperty("head").objectReferenceValue = head;
         so.FindProperty("bodyRenderer").objectReferenceValue = bodyRenderer;

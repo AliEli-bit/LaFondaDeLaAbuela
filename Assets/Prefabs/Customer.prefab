@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8133349205845697600}
+  - component: {fileID: 8606474838956268603}
   m_Layer: 0
   m_Name: Body
   m_TagString: Untagged
@@ -40,6 +41,29 @@ Transform:
   - {fileID: 8836837040512403540}
   m_Father: {fileID: 1986068694845065185}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &8606474838956268603
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 124722481189906742}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.22
+  m_Height: 1.4
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.7, z: 0}
 --- !u!1 &5082509372132463916
 GameObject:
   m_ObjectHideFlags: 0
@@ -231,6 +255,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1986068694845065185}
+  - component: {fileID: 354348355585937324}
   - component: {fileID: 3155110233201156209}
   m_Layer: 0
   m_Name: Customer
@@ -255,6 +280,33 @@ Transform:
   - {fileID: 8133349205845697600}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!54 &354348355585937324
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5984989368868776243}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!114 &3155110233201156209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -345,6 +397,8 @@ MonoBehaviour:
     Neutral: {fileID: 7249367283258614907}
     Angry: {fileID: 9002961177956625841}
     Height: 1.1614542
+  hitBox: {fileID: 8606474838956268603}
+  hitRadius: 0.22
   walkSpeed: 1
   sitDrop: 0.3
   seatHeight: 0.62
