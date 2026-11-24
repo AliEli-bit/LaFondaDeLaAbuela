@@ -1,0 +1,1886 @@
+{
+  "all_reimport_checks_ok": true,
+  "all_within_budget": true,
+  "bevel_segments": {
+    "head_torso": 3,
+    "other": 1
+  },
+  "blender_version": "4.5.16 LTS",
+  "files": {
+    "Assets/Art/Characters/Customer_Child.fbx": {
+      "bbox_max": [
+        0.3223,
+        0.2547,
+        1.0881
+      ],
+      "bbox_min": [
+        -0.3223,
+        -0.3739,
+        0.0
+      ],
+      "budget_triangles": 2500,
+      "height_m": 1.0881,
+      "hierarchy": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "Leg_L",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "name": "Leg_R",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "children": [
+                  {
+                    "name": "Arm_L",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "name": "Arm_R",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Face_Angry",
+                        "triangles": 264,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Happy",
+                        "triangles": 220,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Neutral",
+                        "triangles": 220,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hair",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hat",
+                        "triangles": 138,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Head",
+                    "triangles": 408,
+                    "type": "MESH"
+                  }
+                ],
+                "name": "Torso",
+                "triangles": 352,
+                "type": "MESH"
+              }
+            ],
+            "name": "Hips",
+            "type": "EMPTY"
+          }
+        ],
+        "name": "Customer_Child",
+        "type": "EMPTY"
+      },
+      "mesh_objects": 11,
+      "objects": [
+        "Arm_L",
+        "Arm_R",
+        "Customer_Child",
+        "Face_Angry",
+        "Face_Happy",
+        "Face_Neutral",
+        "Hair",
+        "Hat",
+        "Head",
+        "Hips",
+        "Leg_L",
+        "Leg_R",
+        "Torso"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Customer_Child"
+          }
+        ]
+      },
+      "reimport_check": {
+        "expected_height_m": 1.0881,
+        "face_visibility": {
+          "Face_Angry": false,
+          "Face_Happy": false,
+          "Face_Neutral": true
+        },
+        "facing": "-Y",
+        "facing_probe_dy_m": -0.2116,
+        "file": "Assets/Art/Characters/Customer_Child.fbx",
+        "height_error_pct": 0.0,
+        "height_m": 1.0881,
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "objects": [
+          "Arm_L",
+          "Arm_R",
+          "Customer_Child",
+          "Face_Angry",
+          "Face_Happy",
+          "Face_Neutral",
+          "Hair",
+          "Hat",
+          "Head",
+          "Hips",
+          "Leg_L",
+          "Leg_R",
+          "Torso"
+        ],
+        "ok": true,
+        "root": "Customer_Child",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "triangles": 2086
+      },
+      "root": "Customer_Child",
+      "triangles": 2086,
+      "type_es": "Ni\u00f1o",
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Customer_Grandpa.fbx": {
+      "bbox_max": [
+        0.4252,
+        0.3534,
+        1.3318
+      ],
+      "bbox_min": [
+        -0.4252,
+        -0.3534,
+        -0.0567
+      ],
+      "budget_triangles": 2500,
+      "height_m": 1.3318,
+      "hierarchy": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "Leg_L",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "name": "Leg_R",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "name": "Cane",
+                        "triangles": 108,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Arm_L",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "name": "Arm_R",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Face_Angry",
+                        "triangles": 220,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Happy",
+                        "triangles": 176,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Neutral",
+                        "triangles": 176,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Glasses",
+                        "triangles": 308,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hair",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hat",
+                        "triangles": 80,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Head",
+                    "triangles": 408,
+                    "type": "MESH"
+                  }
+                ],
+                "name": "Torso",
+                "triangles": 364,
+                "type": "MESH"
+              }
+            ],
+            "name": "Hips",
+            "type": "EMPTY"
+          }
+        ],
+        "name": "Customer_Grandpa",
+        "type": "EMPTY"
+      },
+      "mesh_objects": 13,
+      "objects": [
+        "Arm_L",
+        "Arm_R",
+        "Cane",
+        "Customer_Grandpa",
+        "Face_Angry",
+        "Face_Happy",
+        "Face_Neutral",
+        "Glasses",
+        "Hair",
+        "Hat",
+        "Head",
+        "Hips",
+        "Leg_L",
+        "Leg_R",
+        "Torso"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Customer_Grandpa"
+          }
+        ]
+      },
+      "reimport_check": {
+        "expected_height_m": 1.3318,
+        "face_visibility": {
+          "Face_Angry": false,
+          "Face_Happy": false,
+          "Face_Neutral": true
+        },
+        "facing": "-Y",
+        "facing_probe_dy_m": -0.2853,
+        "file": "Assets/Art/Characters/Customer_Grandpa.fbx",
+        "height_error_pct": 0.001,
+        "height_m": 1.3318,
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "objects": [
+          "Arm_L",
+          "Arm_R",
+          "Cane",
+          "Customer_Grandpa",
+          "Face_Angry",
+          "Face_Happy",
+          "Face_Neutral",
+          "Glasses",
+          "Hair",
+          "Hat",
+          "Head",
+          "Hips",
+          "Leg_L",
+          "Leg_R",
+          "Torso"
+        ],
+        "ok": true,
+        "root": "Customer_Grandpa",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "triangles": 2324
+      },
+      "root": "Customer_Grandpa",
+      "triangles": 2324,
+      "type_es": "Abuelito paciente",
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Customer_Office.fbx": {
+      "bbox_max": [
+        0.4655,
+        0.3385,
+        1.3863
+      ],
+      "bbox_min": [
+        -0.5979,
+        -0.3466,
+        -0.0207
+      ],
+      "budget_triangles": 2500,
+      "height_m": 1.3863,
+      "hierarchy": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "Leg_L",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "name": "Leg_R",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "children": [
+                  {
+                    "name": "Arm_L",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Briefcase",
+                        "triangles": 88,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Arm_R",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Face_Angry",
+                        "triangles": 176,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Happy",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Neutral",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hair",
+                        "triangles": 240,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Head",
+                    "triangles": 408,
+                    "type": "MESH"
+                  }
+                ],
+                "name": "Torso",
+                "triangles": 320,
+                "type": "MESH"
+              }
+            ],
+            "name": "Hips",
+            "type": "EMPTY"
+          }
+        ],
+        "name": "Customer_Office",
+        "type": "EMPTY"
+      },
+      "mesh_objects": 11,
+      "objects": [
+        "Arm_L",
+        "Arm_R",
+        "Briefcase",
+        "Customer_Office",
+        "Face_Angry",
+        "Face_Happy",
+        "Face_Neutral",
+        "Hair",
+        "Head",
+        "Hips",
+        "Leg_L",
+        "Leg_R",
+        "Torso"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Customer_Office"
+          }
+        ]
+      },
+      "reimport_check": {
+        "expected_height_m": 1.3863,
+        "face_visibility": {
+          "Face_Angry": false,
+          "Face_Happy": false,
+          "Face_Neutral": true
+        },
+        "facing": "-Y",
+        "facing_probe_dy_m": -0.3063,
+        "file": "Assets/Art/Characters/Customer_Office.fbx",
+        "height_error_pct": 0.001,
+        "height_m": 1.3863,
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "objects": [
+          "Arm_L",
+          "Arm_R",
+          "Briefcase",
+          "Customer_Office",
+          "Face_Angry",
+          "Face_Happy",
+          "Face_Neutral",
+          "Hair",
+          "Head",
+          "Hips",
+          "Leg_L",
+          "Leg_R",
+          "Torso"
+        ],
+        "ok": true,
+        "root": "Customer_Office",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "triangles": 1848
+      },
+      "root": "Customer_Office",
+      "triangles": 1848,
+      "type_es": "Oficinista apurado",
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Customer_Regular.fbx": {
+      "bbox_max": [
+        0.589,
+        0.589,
+        1.488
+      ],
+      "bbox_min": [
+        -0.589,
+        -0.589,
+        0.0
+      ],
+      "budget_triangles": 2500,
+      "height_m": 1.488,
+      "hierarchy": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "Leg_L",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "name": "Leg_R",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "children": [
+                  {
+                    "name": "Arm_L",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "name": "Arm_R",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Face_Angry",
+                        "triangles": 220,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Happy",
+                        "triangles": 176,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Neutral",
+                        "triangles": 176,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hair",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hat",
+                        "triangles": 116,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Head",
+                    "triangles": 408,
+                    "type": "MESH"
+                  }
+                ],
+                "name": "Torso",
+                "triangles": 364,
+                "type": "MESH"
+              }
+            ],
+            "name": "Hips",
+            "type": "EMPTY"
+          }
+        ],
+        "name": "Customer_Regular",
+        "type": "EMPTY"
+      },
+      "mesh_objects": 11,
+      "objects": [
+        "Arm_L",
+        "Arm_R",
+        "Customer_Regular",
+        "Face_Angry",
+        "Face_Happy",
+        "Face_Neutral",
+        "Hair",
+        "Hat",
+        "Head",
+        "Hips",
+        "Leg_L",
+        "Leg_R",
+        "Torso"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Customer_Regular"
+          }
+        ]
+      },
+      "reimport_check": {
+        "expected_height_m": 1.488,
+        "face_visibility": {
+          "Face_Angry": false,
+          "Face_Happy": false,
+          "Face_Neutral": true
+        },
+        "facing": "-Y",
+        "facing_probe_dy_m": -0.3003,
+        "file": "Assets/Art/Characters/Customer_Regular.fbx",
+        "height_error_pct": 0.0,
+        "height_m": 1.488,
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "objects": [
+          "Arm_L",
+          "Arm_R",
+          "Customer_Regular",
+          "Face_Angry",
+          "Face_Happy",
+          "Face_Neutral",
+          "Hair",
+          "Hat",
+          "Head",
+          "Hips",
+          "Leg_L",
+          "Leg_R",
+          "Torso"
+        ],
+        "ok": true,
+        "root": "Customer_Regular",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "triangles": 1944
+      },
+      "root": "Customer_Regular",
+      "triangles": 1944,
+      "type_es": "Habitual (Don Pepe)",
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Customer_Stingy.fbx": {
+      "bbox_max": [
+        0.4342,
+        0.3575,
+        1.5486
+      ],
+      "bbox_min": [
+        -0.462,
+        -0.3575,
+        0.0
+      ],
+      "budget_triangles": 2500,
+      "height_m": 1.5486,
+      "hierarchy": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "Leg_L",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "name": "Leg_R",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "children": [
+                  {
+                    "name": "Arm_L",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Purse",
+                        "triangles": 80,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Arm_R",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Face_Angry",
+                        "triangles": 176,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Happy",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Neutral",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hair",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hat",
+                        "triangles": 142,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Head",
+                    "triangles": 408,
+                    "type": "MESH"
+                  }
+                ],
+                "name": "Torso",
+                "triangles": 364,
+                "type": "MESH"
+              }
+            ],
+            "name": "Hips",
+            "type": "EMPTY"
+          }
+        ],
+        "name": "Customer_Stingy",
+        "type": "EMPTY"
+      },
+      "mesh_objects": 12,
+      "objects": [
+        "Arm_L",
+        "Arm_R",
+        "Customer_Stingy",
+        "Face_Angry",
+        "Face_Happy",
+        "Face_Neutral",
+        "Hair",
+        "Hat",
+        "Head",
+        "Hips",
+        "Leg_L",
+        "Leg_R",
+        "Purse",
+        "Torso"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Customer_Stingy"
+          }
+        ]
+      },
+      "reimport_check": {
+        "expected_height_m": 1.5486,
+        "face_visibility": {
+          "Face_Angry": false,
+          "Face_Happy": false,
+          "Face_Neutral": true
+        },
+        "facing": "-Y",
+        "facing_probe_dy_m": -0.2857,
+        "file": "Assets/Art/Characters/Customer_Stingy.fbx",
+        "height_error_pct": 0.0,
+        "height_m": 1.5486,
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "objects": [
+          "Arm_L",
+          "Arm_R",
+          "Customer_Stingy",
+          "Face_Angry",
+          "Face_Happy",
+          "Face_Neutral",
+          "Hair",
+          "Hat",
+          "Head",
+          "Hips",
+          "Leg_L",
+          "Leg_R",
+          "Purse",
+          "Torso"
+        ],
+        "ok": true,
+        "root": "Customer_Stingy",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "triangles": 1918
+      },
+      "root": "Customer_Stingy",
+      "triangles": 1918,
+      "type_es": "Taca\u00f1o",
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Customer_Student.fbx": {
+      "bbox_max": [
+        0.4476,
+        0.3255,
+        1.3981
+      ],
+      "bbox_min": [
+        -0.4476,
+        -0.3332,
+        0.0
+      ],
+      "budget_triangles": 2500,
+      "height_m": 1.3981,
+      "hierarchy": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "Leg_L",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "name": "Leg_R",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "children": [
+                  {
+                    "name": "Arm_L",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "name": "Arm_R",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Face_Angry",
+                        "triangles": 176,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Happy",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Neutral",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hair",
+                        "triangles": 284,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Headphones",
+                        "triangles": 192,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Head",
+                    "triangles": 408,
+                    "type": "MESH"
+                  }
+                ],
+                "name": "Torso",
+                "triangles": 408,
+                "type": "MESH"
+              }
+            ],
+            "name": "Hips",
+            "type": "EMPTY"
+          }
+        ],
+        "name": "Customer_Student",
+        "type": "EMPTY"
+      },
+      "mesh_objects": 11,
+      "objects": [
+        "Arm_L",
+        "Arm_R",
+        "Customer_Student",
+        "Face_Angry",
+        "Face_Happy",
+        "Face_Neutral",
+        "Hair",
+        "Head",
+        "Headphones",
+        "Hips",
+        "Leg_L",
+        "Leg_R",
+        "Torso"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Customer_Student"
+          }
+        ]
+      },
+      "reimport_check": {
+        "expected_height_m": 1.3981,
+        "face_visibility": {
+          "Face_Angry": false,
+          "Face_Happy": false,
+          "Face_Neutral": true
+        },
+        "facing": "-Y",
+        "facing_probe_dy_m": -0.2945,
+        "file": "Assets/Art/Characters/Customer_Student.fbx",
+        "height_error_pct": 0.0,
+        "height_m": 1.3981,
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "objects": [
+          "Arm_L",
+          "Arm_R",
+          "Customer_Student",
+          "Face_Angry",
+          "Face_Happy",
+          "Face_Neutral",
+          "Hair",
+          "Head",
+          "Headphones",
+          "Hips",
+          "Leg_L",
+          "Leg_R",
+          "Torso"
+        ],
+        "ok": true,
+        "root": "Customer_Student",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "triangles": 2084
+      },
+      "root": "Customer_Student",
+      "triangles": 2084,
+      "type_es": "Estudiante",
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Customer_Tourist.fbx": {
+      "bbox_max": [
+        0.651,
+        0.651,
+        1.5732
+      ],
+      "bbox_min": [
+        -0.651,
+        -0.651,
+        0.0
+      ],
+      "budget_triangles": 2500,
+      "height_m": 1.5732,
+      "hierarchy": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "Leg_L",
+                "triangles": 132,
+                "type": "MESH"
+              },
+              {
+                "name": "Leg_R",
+                "triangles": 132,
+                "type": "MESH"
+              },
+              {
+                "children": [
+                  {
+                    "name": "Arm_L",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "name": "Arm_R",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Face_Angry",
+                        "triangles": 176,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Happy",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Neutral",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Glasses",
+                        "triangles": 220,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hair",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hat",
+                        "triangles": 138,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Head",
+                    "triangles": 408,
+                    "type": "MESH"
+                  }
+                ],
+                "name": "Torso",
+                "triangles": 620,
+                "type": "MESH"
+              }
+            ],
+            "name": "Hips",
+            "type": "EMPTY"
+          }
+        ],
+        "name": "Customer_Tourist",
+        "type": "EMPTY"
+      },
+      "mesh_objects": 12,
+      "objects": [
+        "Arm_L",
+        "Arm_R",
+        "Customer_Tourist",
+        "Face_Angry",
+        "Face_Happy",
+        "Face_Neutral",
+        "Glasses",
+        "Hair",
+        "Hat",
+        "Head",
+        "Hips",
+        "Leg_L",
+        "Leg_R",
+        "Torso"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Customer_Tourist"
+          }
+        ]
+      },
+      "reimport_check": {
+        "expected_height_m": 1.5732,
+        "face_visibility": {
+          "Face_Angry": false,
+          "Face_Happy": false,
+          "Face_Neutral": true
+        },
+        "facing": "-Y",
+        "facing_probe_dy_m": -0.2945,
+        "file": "Assets/Art/Characters/Customer_Tourist.fbx",
+        "height_error_pct": 0.003,
+        "height_m": 1.5732,
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "objects": [
+          "Arm_L",
+          "Arm_R",
+          "Customer_Tourist",
+          "Face_Angry",
+          "Face_Happy",
+          "Face_Neutral",
+          "Glasses",
+          "Hair",
+          "Hat",
+          "Head",
+          "Hips",
+          "Leg_L",
+          "Leg_R",
+          "Torso"
+        ],
+        "ok": true,
+        "root": "Customer_Tourist",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "triangles": 2398
+      },
+      "root": "Customer_Tourist",
+      "triangles": 2398,
+      "type_es": "Turista",
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Customer_Worker.fbx": {
+      "bbox_max": [
+        0.508,
+        0.4929,
+        1.5773
+      ],
+      "bbox_min": [
+        -0.508,
+        -0.4929,
+        0.0
+      ],
+      "budget_triangles": 2500,
+      "height_m": 1.5773,
+      "hierarchy": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "Leg_L",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "name": "Leg_R",
+                "triangles": 88,
+                "type": "MESH"
+              },
+              {
+                "children": [
+                  {
+                    "name": "Arm_L",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "name": "Arm_R",
+                    "triangles": 88,
+                    "type": "MESH"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "Face_Angry",
+                        "triangles": 176,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Happy",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Face_Neutral",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hair",
+                        "triangles": 132,
+                        "type": "MESH"
+                      },
+                      {
+                        "name": "Hat",
+                        "triangles": 166,
+                        "type": "MESH"
+                      }
+                    ],
+                    "name": "Head",
+                    "triangles": 408,
+                    "type": "MESH"
+                  }
+                ],
+                "name": "Torso",
+                "triangles": 352,
+                "type": "MESH"
+              }
+            ],
+            "name": "Hips",
+            "type": "EMPTY"
+          }
+        ],
+        "name": "Customer_Worker",
+        "type": "EMPTY"
+      },
+      "mesh_objects": 11,
+      "objects": [
+        "Arm_L",
+        "Arm_R",
+        "Customer_Worker",
+        "Face_Angry",
+        "Face_Happy",
+        "Face_Neutral",
+        "Hair",
+        "Hat",
+        "Head",
+        "Hips",
+        "Leg_L",
+        "Leg_R",
+        "Torso"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Customer_Worker"
+          }
+        ]
+      },
+      "reimport_check": {
+        "expected_height_m": 1.5773,
+        "face_visibility": {
+          "Face_Angry": false,
+          "Face_Happy": false,
+          "Face_Neutral": true
+        },
+        "facing": "-Y",
+        "facing_probe_dy_m": -0.3122,
+        "file": "Assets/Art/Characters/Customer_Worker.fbx",
+        "height_error_pct": 0.001,
+        "height_m": 1.5773,
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "objects": [
+          "Arm_L",
+          "Arm_R",
+          "Customer_Worker",
+          "Face_Angry",
+          "Face_Happy",
+          "Face_Neutral",
+          "Hair",
+          "Hat",
+          "Head",
+          "Hips",
+          "Leg_L",
+          "Leg_R",
+          "Torso"
+        ],
+        "ok": true,
+        "root": "Customer_Worker",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "triangles": 1850
+      },
+      "root": "Customer_Worker",
+      "triangles": 1850,
+      "type_es": "Trabajador de obra",
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Grandma_Bracelet.fbx": {
+      "bbox_max": [
+        0.046,
+        0.006,
+        0.0452
+      ],
+      "bbox_min": [
+        -0.046,
+        -0.006,
+        -0.0452
+      ],
+      "budget_triangles": 600,
+      "height_m": 0.0904,
+      "hierarchy": {
+        "name": "Grandma_Bracelet",
+        "triangles": 432,
+        "type": "MESH"
+      },
+      "mesh_objects": 1,
+      "objects": [
+        "Grandma_Bracelet"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Grandma_Bracelet"
+          }
+        ]
+      },
+      "reimport_check": {
+        "bbox_max": [
+          0.046,
+          0.006,
+          0.0452
+        ],
+        "bbox_min": [
+          -0.046,
+          -0.006,
+          -0.0452
+        ],
+        "expected_size_m": [
+          0.092,
+          0.012,
+          0.0904
+        ],
+        "file": "Assets/Art/Characters/Grandma_Bracelet.fbx",
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "ok": true,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root": "Grandma_Bracelet",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "size_m": [
+          0.092,
+          0.012,
+          0.0904
+        ],
+        "triangles": 432
+      },
+      "root": "Grandma_Bracelet",
+      "size_m": [
+        0.092,
+        0.012,
+        0.0904
+      ],
+      "triangles": 432,
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Grandma_Sleeve_L.fbx": {
+      "bbox_max": [
+        0.0555,
+        0.0,
+        0.0556
+      ],
+      "bbox_min": [
+        -0.0555,
+        -0.16,
+        -0.0555
+      ],
+      "budget_triangles": 600,
+      "height_m": 0.1111,
+      "hierarchy": {
+        "name": "Grandma_Sleeve_L",
+        "triangles": 324,
+        "type": "MESH"
+      },
+      "mesh_objects": 1,
+      "objects": [
+        "Grandma_Sleeve_L"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Grandma_Sleeve_L"
+          }
+        ]
+      },
+      "reimport_check": {
+        "bbox_max": [
+          0.0555,
+          0.0,
+          0.0556
+        ],
+        "bbox_min": [
+          -0.0555,
+          -0.16,
+          -0.0555
+        ],
+        "expected_size_m": [
+          0.111,
+          0.16,
+          0.1111
+        ],
+        "file": "Assets/Art/Characters/Grandma_Sleeve_L.fbx",
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "ok": true,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root": "Grandma_Sleeve_L",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "size_m": [
+          0.111,
+          0.16,
+          0.1111
+        ],
+        "triangles": 324,
+        "tube_direction": "-Y"
+      },
+      "root": "Grandma_Sleeve_L",
+      "size_m": [
+        0.111,
+        0.16,
+        0.1111
+      ],
+      "triangles": 324,
+      "within_budget": true
+    },
+    "Assets/Art/Characters/Grandma_Sleeve_R.fbx": {
+      "bbox_max": [
+        0.0555,
+        0.0,
+        0.0556
+      ],
+      "bbox_min": [
+        -0.0555,
+        -0.16,
+        -0.0555
+      ],
+      "budget_triangles": 600,
+      "height_m": 0.1111,
+      "hierarchy": {
+        "name": "Grandma_Sleeve_R",
+        "triangles": 324,
+        "type": "MESH"
+      },
+      "mesh_objects": 1,
+      "objects": [
+        "Grandma_Sleeve_R"
+      ],
+      "raw_fbx": {
+        "fbx_version": 7400,
+        "global_settings": {
+          "CoordAxis": 0,
+          "CoordAxisSign": 1,
+          "FrontAxis": 2,
+          "FrontAxisSign": 1,
+          "UnitScaleFactor": 100.0,
+          "UpAxis": 1,
+          "UpAxisSign": 1
+        },
+        "roots": [
+          {
+            "Lcl Rotation": [
+              -90.0,
+              0.0,
+              0.0
+            ],
+            "name": "Grandma_Sleeve_R"
+          }
+        ]
+      },
+      "reimport_check": {
+        "bbox_max": [
+          0.0555,
+          0.0,
+          0.0556
+        ],
+        "bbox_min": [
+          -0.0555,
+          -0.16,
+          -0.0555
+        ],
+        "expected_size_m": [
+          0.111,
+          0.16,
+          0.1111
+        ],
+        "file": "Assets/Art/Characters/Grandma_Sleeve_R.fbx",
+        "materials": [
+          "Fonda_Characters"
+        ],
+        "notes": [],
+        "ok": true,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root": "Grandma_Sleeve_R",
+        "root_rotation_deg": [
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        "root_world_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "size_m": [
+          0.111,
+          0.16,
+          0.1111
+        ],
+        "triangles": 324,
+        "tube_direction": "-Y"
+      },
+      "root": "Grandma_Sleeve_R",
+      "size_m": [
+        0.111,
+        0.16,
+        0.1111
+      ],
+      "triangles": 324,
+      "within_budget": true
+    }
+  },
+  "generator": "Tools/Blender/fonda_figure.py --type all",
+  "global_scale": 1.55,
+  "material": "Fonda_Characters",
+  "palette": {
+    "colours": 79,
+    "file": "Assets/Art/Characters/Fonda_Palette.png",
+    "order": [
+      "#1E1A18",
+      "#1E1E24",
+      "#1E1E26",
+      "#222222",
+      "#26262E",
+      "#2A2A2A",
+      "#2A3242",
+      "#2B2522",
+      "#2B2742",
+      "#2B2B2B",
+      "#2BA6A0",
+      "#2E3A55",
+      "#2F5DA8",
+      "#3A2A20",
+      "#3A2E28",
+      "#3B3B3B",
+      "#3C5A80",
+      "#3E7C59",
+      "#3F4A5E",
+      "#4A3A30",
+      "#5A3A22",
+      "#5A3A28",
+      "#5B4A3E",
+      "#5E6B7A",
+      "#6B3E26",
+      "#6B4E3D",
+      "#6B5BA8",
+      "#784C32",
+      "#7A2E2E",
+      "#7A3E2B",
+      "#7A4E2D",
+      "#8A5A3A",
+      "#8B3A3A",
+      "#8D5A3B",
+      "#8F5E3D",
+      "#8FB3D9",
+      "#A0785A",
+      "#A44A4A",
+      "#A67C52",
+      "#A86F48",
+      "#A8754C",
+      "#B88B68",
+      "#BE926B",
+      "#C0392B",
+      "#C59D7A",
+      "#C68A5A",
+      "#C8553D",
+      "#CDAB8C",
+      "#CFE3EE",
+      "#D1B29C",
+      "#D9A37A",
+      "#D9B36A",
+      "#E0607E",
+      "#E0A526",
+      "#E0AC7E",
+      "#E0AE00",
+      "#E2D4B4",
+      "#E6E6E6",
+      "#E84A5F",
+      "#E8B98F",
+      "#E8C468",
+      "#E98A7A",
+      "#E9DCC9",
+      "#EAF0F4",
+      "#EDEDED",
+      "#F08A24",
+      "#F1C9A5",
+      "#F28AB2",
+      "#F2A33A",
+      "#F2E3C6",
+      "#F2F2F2",
+      "#F3E6C4",
+      "#F4EDE1",
+      "#F4F4F4",
+      "#F5C518",
+      "#F6D2B8",
+      "#F7D046",
+      "#FFF1DC",
+      "#FFFFFF"
+    ],
+    "sha256": "8bfca12b8024d98977a44863342df95a92fe5edb83af4ec2c50c96e576778551",
+    "size_px": 256
+  },
+  "previews": {
+    "contact_sheet": "Tools/Blender/previews/contact_sheet.png"
+  },
+  "rerun_check": {
+    "compared_with": "previous report.json",
+    "differences": [],
+    "identical": true,
+    "note": "FBX bytes are not compared: the exporter writes a creation timestamp. Names, counts, triangles, hierarchy, heights and bounding boxes are compared."
+  },
+  "seated_bar_check": {
+    "bar_height_m": 0.9,
+    "per_type": {
+      "Child": {
+        "chin_above_bar": true,
+        "chin_z_m": 0.977,
+        "eye_z_m": 1.211,
+        "eyes_above_bar": true,
+        "root_z_seated_m": 0.508,
+        "top_z_m": 1.596
+      },
+      "Grandpa": {
+        "chin_above_bar": true,
+        "chin_z_m": 1.091,
+        "eye_z_m": 1.4,
+        "eyes_above_bar": true,
+        "root_z_seated_m": 0.473,
+        "top_z_m": 1.805
+      },
+      "Office": {
+        "chin_above_bar": true,
+        "chin_z_m": 1.136,
+        "eye_z_m": 1.474,
+        "eyes_above_bar": true,
+        "root_z_seated_m": 0.459,
+        "top_z_m": 1.845
+      },
+      "Regular": {
+        "chin_above_bar": true,
+        "chin_z_m": 1.116,
+        "eye_z_m": 1.442,
+        "eyes_above_bar": true,
+        "root_z_seated_m": 0.465,
+        "top_z_m": 1.953
+      },
+      "Stingy": {
+        "chin_above_bar": true,
+        "chin_z_m": 1.101,
+        "eye_z_m": 1.417,
+        "eyes_above_bar": true,
+        "root_z_seated_m": 0.47,
+        "top_z_m": 2.018
+      },
+      "Student": {
+        "chin_above_bar": true,
+        "chin_z_m": 1.116,
+        "eye_z_m": 1.442,
+        "eyes_above_bar": true,
+        "root_z_seated_m": 0.465,
+        "top_z_m": 1.863
+      },
+      "Tourist": {
+        "chin_above_bar": true,
+        "chin_z_m": 1.116,
+        "eye_z_m": 1.442,
+        "eyes_above_bar": true,
+        "root_z_seated_m": 0.465,
+        "top_z_m": 2.038
+      },
+      "Worker": {
+        "chin_above_bar": true,
+        "chin_z_m": 1.146,
+        "eye_z_m": 1.491,
+        "eyes_above_bar": true,
+        "root_z_seated_m": 0.456,
+        "top_z_m": 2.033
+      }
+    },
+    "stool_height_m": 0.62
+  }
+}
