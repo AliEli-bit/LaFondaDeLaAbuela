@@ -37,7 +37,7 @@ Rama: `feat/customer-types` (desde `feat/combo` en 807e4f5, sin pushear). Entreg
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S1, S2, S4, A1–A5 (A4 cambiada en L6) | inline (sin razón de escritor): `CustomerProfile`, `CustomerTypeRule` (tipos elegibles, elección por peso, plato), propina por tipo, tests RED antes | hecho: RED 15 de 17 (6 `NotImplementedException`, 8 valores por defecto faltantes, globo y propina), GREEN 176/176 | 5c768eb |
+| T1 | S1, S2, S4, A1–A5 (A4 cambiada en L6) | inline (sin razón de escritor): `CustomerProfile`, `CustomerTypeRule` (tipos elegibles, elección por peso, plato), propina por tipo, tests RED antes | hecho: RED 15 de 17, GREEN 176/176; A4 nueva: RED 1, GREEN 176/176 | 5c768eb, beddbfb |
 | T2 | S3, A6, A8 | inline: `Customer` usa el aspecto y el globo del tipo; el spawner elige el tipo; el builder crea los 8 perfiles | hecho: escena construida con 0 errores, 8 perfiles en `Assets/Data/Customers/` | 5c768eb |
 | T3 | S5 | padre en el editor abierto vía computer-use: tests y prueba en Play con test PlayMode temporal | hecho: 176/176, prueba en Play (L3); falta prueba a mano | 5c768eb |
 
@@ -50,3 +50,4 @@ Rama: `feat/customer-types` (desde `feat/combo` en 807e4f5, sin pushear). Entreg
 - **L5 (2026-11-24, entrega):** commit `5c768eb` (perfiles, reglas, cableado, builder, assets, escena, tests y documento). Sin push. `XRGeneralSettingsPerBuildTarget.asset` no se commiteó.
 - **L6 (2026-11-24, cambio pedido por el usuario sobre L4):** "Sí, cambialo". A4 pasa a: cualquier tipo entra en cualquier fase y pide su favorito más cercano al reloj. Se reabre T1.
 - **L7 (2026-11-24, A4 nueva):** RED: `Eligible_AreTheTypesWithADishOnTheMenu` falló con `NotImplementedException`; GREEN 176/176. Prueba en Play del turno completo a ×10: 41 clientes, todos los pedidos dentro de los favoritos de su tipo, sin errores. Los 8 tipos aparecieron; el abuelito, el niño y el estudiante entraron también en el turno normal y en la hora pico con su plato de 1 ingrediente, y el trabajador en el turno normal con su plato de 3. En la apertura entraron 4 tipos distintos (pocos clientes, elegidos al azar).
+- **L8 (2026-11-24, entrega):** commit `beddbfb`. Sin push.
