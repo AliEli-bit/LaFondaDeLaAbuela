@@ -38,7 +38,7 @@ Juego VR de **simulación/gestión casual, sin terror**, para una tarea académi
 Reloj visible en el juego (de pared) que además controla la dificultad. Afecta la frecuencia de llegada de clientes y la complejidad de pedidos.
 
 ### Escena 1 — Apertura del turno (tutorial)
-- Un **cuaderno de recetas** sobre la barra muestra el plato con dibujos y la abuela lo lee en voz baja (*"a ver… papa, nomás"*).
+- Un **cuaderno de recetas** sobre la barra muestra el plato con dibujos y la abuela lo lee en voz baja (*"a ver… hamburguesa sola, nomás"*).
 - Un solo cliente, plato de **1 ingrediente**. Se sienta en el asiento del centro.
 - El tutorial recorre el ciclo completo: armar, entregar y cobrar.
 - Acierto: campanita + carita feliz. Error: el cliente niega con la cabeza y el cuaderno marca qué sobra.
@@ -47,7 +47,7 @@ Reloj visible en el juego (de pared) que además controla la dificultad. Afecta 
 - Pedidos de **2–3 ingredientes**.
 - A veces hay **2 clientes** sentados a la vez (2 asientos, cada uno con su bandeja).
 - Carita feliz/enojada sobre el cliente según el tiempo de espera.
-- Menú de 3–4 platos que reutilizan los mismos ingredientes.
+- Menú de hamburguesas, lomitos y tazón de papas que reutilizan los mismos ingredientes (ver "Menú").
 - El cliente entra por la puerta, se sienta en la barra y se va al terminar (no hay desplazamiento del jugador).
 
 ### Escena 3 — Hora pico
@@ -74,10 +74,10 @@ Implementar de forma **parametrizable** (ScriptableObjects o campos serializados
 - **Tirar la propina:** el jugador puede tirarle cualquier moneda al cliente. El cliente reacciona de forma cómica (se agacha, se ofende) y la abuela refunfuña (*"¡y encima tacaño!"*). El único efecto es que esa plata se pierde: tirar una propina nunca da nada a cambio, para que siga siendo un gesto y no un truco.
 
 **La voz de la abuela** (son solo audios, sin animación):
-- Lee los pedidos en voz baja (*"a ver… arroz con huevo"*).
+- Lee los pedidos en voz baja (*"a ver… lomito con tomate"*).
 - Celebra los combos (*"¡eso, todavía tengo mano!"*) y se alegra al cobrar.
 - Refunfuña si tira una propina.
-- Si tarda con un cliente que pide *"lo de siempre"*, se acuerda en voz alta (*"ay, ¿qué era lo de don Pepe?… ¡arroz con huevo!"*); funciona como pista.
+- Si tarda con un cliente que pide *"lo de siempre"*, se acuerda en voz alta (*"ay, ¿qué era lo de don Pepe?… ¡lomito completo!"*); funciona como pista.
 
 **Cuaderno de recetas:** en el extremo izquierdo de la barra. En la Escena 1 muestra el paso del tutorial; después queda abierto en el menú como referencia. Solo se lee, no se agarra.
 
@@ -86,16 +86,26 @@ Implementar de forma **parametrizable** (ScriptableObjects o campos serializados
 2. Lanzar ingredientes a la bandeja (`throwOnDetach`). Si falla, cae y el dispensador repone; solo cuesta tiempo.
 3. Combo de rapidez en todo el turno: cada entrega rápida seguida sube el tono de la campanita y la propina; un error reinicia el combo sin otra penalización.
 4. Frasco de propinas en la barra que se llena de monedas; lo llena el jugador con la mano (ver "Propinas en mano").
-5. Tipos de cliente: apurado (menos paciencia), abuelito paciente, niño que siempre pide papa, habitual que pide *"lo de siempre"* sin mostrar el globo.
+5. Tipos de cliente: apurado (menos paciencia), abuelito paciente, niño que siempre pide tazón de papas, habitual que pide *"lo de siempre"* sin mostrar el globo.
 
 **Distribución de la estación** (concepto v5, barra curva; medidas en metros, jugador en el origen mirando hacia +z, ángulos medidos desde +z):
 - Barra curva alrededor del jugador: arco de −80° a +80°, radios de 0,22 a 0,78, alto 0,90. Una barra recta no sirve: con 3 asientos bien separados, las bandejas de los lados quedarían a ~0,72, fuera de alcance.
-- Ingredientes en un arco a 0,33, de izquierda a derecha: ensalada (−70°), arroz (−35°), papa (0°), huevo (35°), carne (70°).
+- 6 ingredientes en un arco a 0,33, de izquierda a derecha: lechuga (−70°), tomate (−42°), queso (−14°), medallón (14°), lomito (42°), papas (70°). Quedan a ~0,16 entre centros.
 - 3 bandejas en un arco a 0,50, a −40°, 0° y 40°, una frente a cada asiento.
 - 3 asientos en un arco a 1,00, a −40°, 0° y 40° (0,68 entre clientes), y un lugar de espera de pie en (−0,35; 1,65).
 - Pared del fondo detrás de los clientes (z = 2,40), con puerta a la izquierda y el reloj a 2,20 de alto.
 - Frasco de propinas en el extremo derecho de la barra (78°, a 0,45), al alcance de la mano. Las monedas aparecen junto a la bandeja de cada asiento, a ~0,50.
 - Cuaderno de recetas en el extremo izquierdo de la barra (−65°, a 0,65), fuera de alcance a propósito: solo se lee.
+
+**Dirección de arte (confirmada por el autor):**
+- Estilo **low-poly de color plano**, con iluminación cálida precalculada y sin sombras en tiempo real. Un solo detalle con textura para darle identidad (por ejemplo, un mantel o un textil; motivo por definir).
+- Paquete base: **KayKit Restaurant Bits** (Kay Lousberg, versión gratis, CC0, FBX/OBJ/GLTF). Usa un único atlas de gradiente de 1024×1024, así que casi todo comparte un material y se agrupa bien.
+- Regla: un solo autor como base. Si falta algo, primero buscarlo en otros paquetes KayKit (por ejemplo, Furniture Bits) antes de mezclar con otros autores.
+- Clientes: figuras simples estilizadas (cuerpo y cabeza) animadas por código.
+- Manos de la abuela: las manos de XR Hands / Hands Interaction Demo, vestidas con manga de delantal y pulsera.
+- Barra curva: ProBuilder (forma *Pipe* recortada a 160°), pendiente de instalar.
+- Presupuesto de referencia en Quest 3: < 200 draw calls y < 1,5 M triángulos por cuadro a 72 Hz (a confirmar midiendo en el visor).
+- Registrar cada paquete y su licencia en `CREDITS.md`.
 
 **Fórmula del Reloj** (`t` = tiempo transcurrido / duración total del turno, de 0 a 1):
 - Intervalo entre clientes = `12 − 7·t` segundos
@@ -105,13 +115,21 @@ Implementar de forma **parametrizable** (ScriptableObjects o campos serializados
 
 **Duración del turno:** tiempo fijo ~5 min (E1 ≈ 1 min, E2 ≈ 3 min, E3 ≈ 1:30). Al final, pantalla de resumen: clientes atendidos y propinas.
 
-**Menú tentativo** (5 ingredientes: arroz, huevo, papa, carne, ensalada):
-| Plato | Ingredientes |
-|---|---|
-| Plato de papa | papa (tutorial) |
-| Arroz con huevo | arroz + huevo |
-| Plato de carne | carne + arroz + ensalada |
-| Plato completo | carne + papa + huevo |
+**Menú (confirmado por el autor)** — 6 ingredientes: medallón, lomito, queso, lechuga, tomate, papas.
+- Cada plato tiene una **base** que aparece sola en la bandeja cuando el cliente pide: la base del pan (hamburguesas y lomitos) o un tazón (papas). La base no cuenta como ingrediente.
+- La bandeja compara qué ingredientes hay, no en qué orden.
+- Al acertar una hamburguesa o un lomito, la **tapa del pan cae sola** encima: es parte del feedback de acierto.
+
+| Plato | Base | Ingredientes |
+|---|---|---|
+| Hamburguesa sola | pan | medallón (tutorial) |
+| Tazón de papas | tazón | papas |
+| Hamburguesa con queso | pan | medallón + queso |
+| Lomito con tomate | pan | lomito + tomate |
+| Hamburguesa completa | pan | medallón + lechuga + tomate |
+| Lomito completo | pan | lomito + queso + tomate |
+
+Modelos de KayKit Restaurant Bits: medallón = `food_ingredient_burger_cooked`, lomito = `food_ingredient_steak_pieces`, queso = `food_ingredient_cheese_slice`, lechuga = `food_ingredient_lettuce_slice`, tomate = `food_ingredient_tomato_slice`, papas = `food_ingredient_potato_chopped`, pan = `food_ingredient_bun_bottom` / `food_ingredient_bun_top`, tazón = `bowl`. La cebolla (`food_ingredient_onion_rings`) queda de reserva.
 
 **Feedback:**
 - Carita: 3 estados — feliz (> 60 % de paciencia), neutral, enojada (< 25 %).
@@ -123,7 +141,7 @@ Implementar de forma **parametrizable** (ScriptableObjects o campos serializados
 ## 6. Pendientes abiertos
 - Confirmar mecánica final de la Escena 3.
 - Confirmar fórmula y valores del Reloj de la Fonda.
-- Cantidad y variedad final del menú.
+- Probar en el visor que 6 dispensadores a ~0,16 entre sí se agarran sin tomar el de al lado.
 - Condición de cierre del turno (propuesto: tiempo fijo).
 - Diseño visual de la carita y de los sonidos.
 - Uso de las propinas (propuesto: el jugador las echa al frasco + resumen final).
@@ -139,7 +157,7 @@ Carpeta `Assets/Scripts/`:
 | Script | Responsabilidad |
 |---|---|
 | `IngredientData` (ScriptableObject) | id, nombre, ícono, prefab |
-| `RecipeData` (ScriptableObject) | nombre del plato, lista de ingredientes requeridos |
+| `RecipeData` (ScriptableObject) | nombre del plato, base (pan o tazón), lista de ingredientes requeridos |
 | `Ingredient` | componente en cada ingrediente; referencia a su `IngredientData` |
 | `IngredientDispenser` | repone una copia cuando se agarra el ingrediente (escucha `selectExited`/`selectEntered`) |
 | `Tray` | gestiona sockets; pertenece a un asiento; al entrar/salir ingredientes compara contra el pedido del cliente sentado; emite evento de plato correcto/incorrecto |
