@@ -67,7 +67,7 @@ namespace Fonda
         {
             var settings = clock.Settings;
             int target = settings.IngredientsAt(t);
-            var profile = PickProfile(target);
+            var profile = PickProfile();
             var candidates = profile != null
                 ? CustomerTypeRule.DishCandidates(profile, menu, target)
                 : MenuRule.Candidates(ingredientCounts, target);
@@ -88,16 +88,12 @@ namespace Fonda
             active.Add(customer);
         }
 
-        /// <summary>A type that can order a dish of this size, by weight (customer types A4, A5). Null without types.</summary>
-        CustomerProfile PickProfile(int target)
+        /// <summary>A type with a dish on the menu, by weight (customer types A4, A5). Null without types.</summary>
+        CustomerProfile PickProfile()
         {
             if (profiles == null || profiles.Length == 0) return null;
-            var eligible = CustomerTypeRule.Eligible(profiles, menu, target);
-            int index = CustomerTypeRule.Pick(profiles, eligible, Random.value);
-            if (index < 0) return null;
-            var profile = profiles[index];
-            // A type whose favourites are not on this menu falls back to a plain customer.
-            return CustomerTypeRule.Dishes(profile, menu).Count > 0 ? profile : null;
+            int index = CustomerTypeRule.Pick(profiles, CustomerTypeRule.Eligible(profiles, menu), Random.value);
+            return index >= 0 ? profiles[index] : null;
         }
 
         void OnCustomerLeft(Customer customer)

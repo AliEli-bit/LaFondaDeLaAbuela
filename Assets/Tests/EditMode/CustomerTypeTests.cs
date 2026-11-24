@@ -141,21 +141,25 @@ namespace Fonda.Tests
             CollectionAssert.AreEquivalent(new[] { 4, 5 }, CustomerTypeRule.DishCandidates(worker, menu, 1));
         }
 
-        // A4: at the opening (1 ingredient) the worker, who only orders 3, does not come in.
+        // A4 (L6): any type comes in at any time, as long as one of its dishes is on the menu.
         [Test]
-        public void Eligible_AreTheTypesWithADishOfThatSize()
+        public void Eligible_AreTheTypesWithADishOnTheMenu()
         {
+            var offMenu = ScriptableObject.CreateInstance<RecipeData>();
+            assets.Add(offMenu);
+            var lost = Profile("Perdido");
+            var so = new SerializedObject(lost);
+            var list = so.FindProperty("favorites");
+            list.arraySize = 1;
+            list.GetArrayElementAtIndex(0).objectReferenceValue = offMenu;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
             var profiles = new List<CustomerProfile>
             {
                 Profile("Oficinista"), Profile("Abuelito", favorites: new[] { 0, 1 }),
-                Profile("Trabajador", favorites: new[] { 4, 5 }), null,
+                Profile("Trabajador", favorites: new[] { 4, 5 }), null, lost,
             };
-            CollectionAssert.AreEquivalent(new[] { 0, 1 }, CustomerTypeRule.Eligible(profiles, menu, 1));
-            CollectionAssert.AreEquivalent(new[] { 0 }, CustomerTypeRule.Eligible(profiles, menu, 2));
-            CollectionAssert.AreEquivalent(new[] { 0, 2 }, CustomerTypeRule.Eligible(profiles, menu, 3));
-
-            var picky = new List<CustomerProfile> { Profile("Abuelito", favorites: new[] { 0, 1 }), null };
-            CollectionAssert.AreEquivalent(new[] { 0 }, CustomerTypeRule.Eligible(picky, menu, 3), "nobody matches: every type");
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, CustomerTypeRule.Eligible(profiles, menu));
         }
 
         // A5: "con qué frecuencia aparece cada uno", a weight per type.

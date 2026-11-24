@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Fonda
 {
     /// <summary>
-    /// Which type of customer comes in and what it orders (customer types A3-A5).
+    /// Which type of customer comes in and what it orders (customer types A3-A5): any type at any time, ordering its favourite closest to the clock.
     /// </summary>
     public static class CustomerTypeRule
     {
@@ -31,23 +31,13 @@ namespace Fonda
             return picked;
         }
 
-        /// <summary>Indices of the types that have a dish with exactly <paramref name="target"/> ingredients; all of them when none has (A4).</summary>
-        public static List<int> Eligible(IReadOnlyList<CustomerProfile> profiles, IReadOnlyList<RecipeData> menu, int target)
+        /// <summary>Indices of the types with at least one dish on the menu: any type comes in at any time (A4).</summary>
+        public static List<int> Eligible(IReadOnlyList<CustomerProfile> profiles, IReadOnlyList<RecipeData> menu)
         {
-            var exact = new List<int>();
-            var all = new List<int>();
+            var eligible = new List<int>();
             for (int p = 0; p < profiles.Count; p++)
-            {
-                if (profiles[p] == null) continue;
-                all.Add(p);
-                foreach (var i in Dishes(profiles[p], menu))
-                {
-                    if (menu[i].Ingredients.Count != target) continue;
-                    exact.Add(p);
-                    break;
-                }
-            }
-            return exact.Count > 0 ? exact : all;
+                if (profiles[p] != null && Dishes(profiles[p], menu).Count > 0) eligible.Add(p);
+            return eligible;
         }
 
         /// <summary>Picks one of <paramref name="eligible"/> by weight with <paramref name="roll"/> in [0, 1) (A5). -1 when empty.</summary>
