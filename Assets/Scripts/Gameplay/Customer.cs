@@ -40,10 +40,18 @@ namespace Fonda
         static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
         public event Action<Customer> Left;
+        /// <summary>The customer took the plate.</summary>
+        public event Action<Customer> Served;
+        /// <summary>The player put something on the tray that was not ordered.</summary>
+        public event Action<Customer> Refused;
+        /// <summary>Patience ran out and the customer stood up without eating.</summary>
+        public event Action<Customer> LeftAngry;
 
         public RecipeData Order { get; private set; }
         public BarSeat Seat { get; private set; }
         public CustomerCycle Cycle { get; private set; }
+        /// <summary>Extra coins earned by the speed combo when served (combo S2).</summary>
+        public int TipBonus { get; private set; }
 
         Vector3 door;
         bool seated;
@@ -71,14 +79,26 @@ namespace Fonda
         {
             if (Cycle == null || !Cycle.Serve()) return false;
             Debug.Log("[Customer] Recibe su plato: " + Order.DisplayName);
-            ShowBubble("¡Gracias, doña!");
+            ShowBubble(ThanksText);
+            Served?.Invoke(this);
             return true;
+        }
+
+        const string ThanksText = "¡Gracias, doña!";
+
+        /// <summary>The shift's speed combo after this delivery: shown in the bubble from x2, with its extra coins.</summary>
+        public void ApplyCombo(int combo, int tipBonus)
+        {
+            TipBonus = Mathf.Max(0, tipBonus);
+            ShowBubble(combo >= 2 ? ThanksText + "\n¡Combo ×" + combo + "!" : ThanksText);
         }
 
         /// <summary>The player put something that was not ordered on the tray.</summary>
         public void ShakeHead()
         {
-            if (Cycle == null || Cycle.State != CustomerState.Waiting || head == null) return;
+            if (Cycle == null || Cycle.State != CustomerState.Waiting) return;
+            Refused?.Invoke(this);
+            if (head == null) return;
             if (shake != null) StopCoroutine(shake);
             shake = StartCoroutine(Shake());
         }
@@ -127,14 +147,17 @@ namespace Fonda
             {
                 ShowBubble("¡Me voy!");
                 Debug.Log("[Customer] Se va enojado de " + Seat.name + " sin comer");
+                LeftAngry?.Invoke(this);
             }
             else
             {
                 ShowBubble(null);
                 Debug.Log("[Customer] Terminó de comer y se va de " + Seat.name);
             }
-            int coins = Seat.LeaveTip(Cycle).Count;
-            if (coins > 0) Debug.Log("[Customer] Deja " + coins + " moneda(s) junto a la bandeja de " + Seat.name);
+            int coins = Seat.LeaveTip(Cycle, TipBonus).Count;
+            if (coins > 0)
+                Debug.Log("[Customer] Deja " + coins + " moneda(s) junto a la bandeja de " + Seat.name +
+                          (TipBonus > 0 ? " (+" + TipBonus + " por el combo)" : ""));
             ReleaseSeat();
         }
 

@@ -26,6 +26,9 @@ namespace Fonda
 
         /// <summary>Raised when a customer walks out the door, served or angry.</summary>
         public event Action<Customer> CustomerLeft;
+        public event Action<Customer> CustomerServed;
+        public event Action<Customer> CustomerRefused;
+        public event Action<Customer> CustomerLeftAngry;
 
         public IReadOnlyList<Customer> Active => active;
 
@@ -66,6 +69,9 @@ namespace Fonda
             var customer = Instantiate(customerPrefab, door.position, door.rotation);
             seat.Claim(customer);
             customer.Left += OnCustomerLeft;
+            customer.Served += c => CustomerServed?.Invoke(c);
+            customer.Refused += c => CustomerRefused?.Invoke(c);
+            customer.LeftAngry += c => CustomerLeftAngry?.Invoke(c);
             customer.Init(recipe, seat, door.position, settings.PatienceAt(t), settings.EatSeconds);
             active.Add(customer);
         }

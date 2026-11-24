@@ -54,13 +54,14 @@ namespace Fonda
 
         /// <summary>
         /// Drops the tip of a customer who is leaving: coins by the patience left when served, none if they left angry.
-        /// Coins nobody picks up just stay on the bar (S4).
+        /// Coins nobody picks up just stay on the bar (S4). <paramref name="bonusCoins"/> is the combo bonus (combo S2).
         /// </summary>
-        public List<TipCoin> LeaveTip(CustomerCycle cycle)
+        public List<TipCoin> LeaveTip(CustomerCycle cycle, int bonusCoins = 0)
         {
             var dropped = new List<TipCoin>();
             if (coinPrefab == null || coinSpot == null) return dropped;
             int count = TipRule.CoinsFor(cycle, minCoins, maxCoins);
+            if (count > 0) count += Mathf.Max(0, bonusCoins); // an angry customer leaves nothing, combo or not
             for (int i = 0; i < count; i++)
             {
                 var offset = coinSpot.rotation * CoinOffsets[i % CoinOffsets.Length] + Vector3.up * 0.01f * (i / CoinOffsets.Length);

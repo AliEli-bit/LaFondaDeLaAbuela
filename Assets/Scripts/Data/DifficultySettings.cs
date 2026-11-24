@@ -36,6 +36,13 @@ namespace Fonda
         [SerializeField] int normalMaxCustomers = 2;
         [SerializeField] int rushMaxCustomers = 3;
 
+        [Header("Speed combo")]
+        [Tooltip("A delivery is fast when more than this share of patience is left (the happy face).")]
+        [SerializeField, Range(0f, 1f)] float comboFastAbove = 0.60f;
+        [Tooltip("Extra coins per combo step from the second fast delivery in a row.")]
+        [SerializeField] int comboCoinsPerStep = 1;
+        [SerializeField] int comboMaxBonusCoins = 2;
+
         [Header("Wall clock (hours of the day)")]
         [SerializeField] float startHour = 15f;
         [SerializeField] float endHour = 20f;
@@ -43,6 +50,9 @@ namespace Fonda
         public float ShiftSeconds => openingSeconds + normalSeconds + rushSeconds;
         public float FirstArrivalSeconds => firstArrivalSeconds;
         public float EatSeconds => eatSeconds;
+        public float ComboFastAbove => comboFastAbove;
+        public int ComboCoinsPerStep => comboCoinsPerStep;
+        public int ComboMaxBonusCoins => comboMaxBonusCoins;
 
         public float IntervalAt(float t) => Mathf.Lerp(intervalStart, intervalEnd, Mathf.Clamp01(t));
         public float PatienceAt(float t) => Mathf.Lerp(patienceStart, patienceEnd, Mathf.Clamp01(t));

@@ -69,6 +69,7 @@ namespace Fonda
         public int TipsBanked { get; set; }
         public int TipsLeftover { get; set; }
         public int TipsTotal => TipsBanked + TipsLeftover;
+        public int BestCombo { get; set; }
 
         public void RecordCustomer(bool leftAngry)
         {
@@ -78,8 +79,9 @@ namespace Fonda
 
         public string Text()
         {
-            var text = "¡Se terminó el turno!\nClientes atendidos: " + Served + "\nSe fueron enojados: " + LeftAngry +
-                       "\nPropinas: $" + TipsTotal;
+            var text = "¡Se terminó el turno!\nClientes atendidos: " + Served + "\nSe fueron enojados: " + LeftAngry;
+            if (BestCombo >= 2) text += "\nMejor combo: ×" + BestCombo;
+            text += "\nPropinas: $" + TipsTotal;
             if (TipsLeftover > 0) text += "\n($" + TipsLeftover + " sumadas de la barra)";
             return text;
         }
