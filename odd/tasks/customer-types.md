@@ -37,9 +37,9 @@ Rama: `feat/customer-types` (desde `feat/combo` en 807e4f5, sin pushear). Entreg
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S1, S2, S4, A1–A5 | inline (sin razón de escritor): `CustomerProfile`, `CustomerTypeRule` (tipos elegibles, elección por peso, plato), propina por tipo, tests RED antes | hecho: RED 15 de 17 (6 `NotImplementedException`, 8 valores por defecto faltantes, globo y propina), GREEN 176/176 | ver L5 |
-| T2 | S3, A6, A8 | inline: `Customer` usa el aspecto y el globo del tipo; el spawner elige el tipo; el builder crea los 8 perfiles | hecho: escena construida con 0 errores, 8 perfiles en `Assets/Data/Customers/` | ver L5 |
-| T3 | S5 | padre en el editor abierto vía computer-use: tests y prueba en Play con test PlayMode temporal | hecho: 176/176, prueba en Play (L3); falta prueba a mano | ver L5 |
+| T1 | S1, S2, S4, A1–A5 | inline (sin razón de escritor): `CustomerProfile`, `CustomerTypeRule` (tipos elegibles, elección por peso, plato), propina por tipo, tests RED antes | hecho: RED 15 de 17 (6 `NotImplementedException`, 8 valores por defecto faltantes, globo y propina), GREEN 176/176 | 5c768eb |
+| T2 | S3, A6, A8 | inline: `Customer` usa el aspecto y el globo del tipo; el spawner elige el tipo; el builder crea los 8 perfiles | hecho: escena construida con 0 errores, 8 perfiles en `Assets/Data/Customers/` | 5c768eb |
+| T3 | S5 | padre en el editor abierto vía computer-use: tests y prueba en Play con test PlayMode temporal | hecho: 176/176, prueba en Play (L3); falta prueba a mano | 5c768eb |
 
 ## Log
 
@@ -47,3 +47,4 @@ Rama: `feat/customer-types` (desde `feat/combo` en 807e4f5, sin pushear). Entreg
 - **L2 (2026-11-24, RED y GREEN):** `CustomerTypeTests` (17 casos): fallaron 15 (6 con `NotImplementedException`, los 8 valores por defecto, el globo del habitual y la propina del oficinista lento). `Defaults_FitTheBar` pasó vacío con la lista vacía. GREEN: 176/176 EditMode. Escena `Fonda` reconstruida desde el menú: errores 0.
 - **L3 (2026-11-24, prueba en Play):** test PlayMode temporal sobre `Fonda`, turno completo a ×10, sirviendo por código a 3 de cada 4 clientes. 38 clientes de 7 tipos (el estudiante no salió en esta corrida). Cada uno mostró su personaje (`Customer_<Tipo>`). Paciencia = la del reloj × el tipo (0,70, 1,00, 1,30, 1,50). El turista comió 6 s; el resto, 3 s. Abuelito y niño pidieron tazón de papas; el trabajador solo entró con platos de 3 ingredientes. Monedas con paciencia llena: oficinista 3, habitual 3, turista 3, tacaño 1, más el combo. Resumen: "Clientes atendidos: 29 | Se fueron enojados: 9 | Mejor combo: ×4 | Propinas: $110". Sin errores ni excepciones. Scripts temporales borrados. Pendiente: prueba a mano con el simulador.
 - **L4 (2026-11-24, consecuencia de A4, para decidir):** con A4, los tipos que solo piden platos de 1 ingrediente (abuelito, niño, estudiante) entran solo en la apertura, y el trabajador solo en la hora pico. En el turno normal (2 ingredientes) entran solo los que piden "cualquiera". Alternativa: dejar entrar a cualquier tipo y que pida su favorito más cercano a lo que marca el reloj.
+- **L5 (2026-11-24, entrega):** commit `5c768eb` (perfiles, reglas, cableado, builder, assets, escena, tests y documento). Sin push. `XRGeneralSettingsPerBuildTarget.asset` no se commiteó.
