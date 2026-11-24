@@ -19,11 +19,17 @@ namespace Fonda
         [SerializeField] Renderer bodyRenderer;
         [SerializeField] Renderer faceRenderer;
         [SerializeField] TextMeshPro bubble;
+        [Tooltip("Blender characters; one is picked at random per customer. Empty: the blockout parts above are used.")]
+        [SerializeField] CustomerLook[] looks = Array.Empty<CustomerLook>();
 
         [Header("Motion")]
         [SerializeField] float walkSpeed = 1.0f;
         [Tooltip("How much the body drops when sitting on the stool.")]
         [SerializeField] float sitDrop = 0.3f;
+        [Tooltip("Height of the stool cushion; a Blender character sits with its thighs on it.")]
+        [SerializeField] float seatHeight = 0.62f;
+        [Tooltip("Gap between the top of the character and its speech bubble.")]
+        [SerializeField] float bubbleGap = 0.18f;
         [SerializeField] float shakeSeconds = 0.6f;
         [SerializeField] float shakeDegrees = 25f;
 
@@ -56,6 +62,8 @@ namespace Fonda
         Vector3 door;
         bool seated;
         bool released;
+        CustomerLook look;
+        float sitOffset;
         MaterialPropertyBlock block;
         Coroutine shake;
 
@@ -67,7 +75,8 @@ namespace Fonda
             door = doorPosition;
             Cycle = new CustomerCycle(patienceSeconds, eatSeconds);
             transform.position = doorPosition;
-            if (bodyRenderer != null && bodyColors.Length > 0)
+            PickLook();
+            if (look == null && bodyRenderer != null && bodyColors.Length > 0)
                 SetColor(bodyRenderer, bodyColors[UnityEngine.Random.Range(0, bodyColors.Length)]);
             ShowBubble(null);
             UpdateFace();
@@ -131,7 +140,9 @@ namespace Fonda
         void SitDown()
         {
             transform.rotation = Seat.SeatPoint.rotation;
-            if (body != null) body.localPosition += Vector3.down * sitDrop;
+            sitOffset = look != null ? look.SeatedLift(seatHeight) : -sitDrop;
+            if (body != null) body.localPosition += Vector3.up * sitOffset;
+            look?.Sit(true);
             seated = true;
             Cycle.Sit();
             Seat.OpenOrder(Order);
@@ -141,7 +152,8 @@ namespace Fonda
 
         void StandUp()
         {
-            if (seated && body != null) body.localPosition -= Vector3.down * sitDrop;
+            if (seated && body != null) body.localPosition -= Vector3.up * sitOffset;
+            if (seated) look?.Sit(false);
             seated = false;
             if (Cycle.LeftAngry)
             {
@@ -197,9 +209,31 @@ namespace Fonda
             shake = null;
         }
 
+        /// <summary>Shows one of the Blender characters at random and puts the bubble above its head.</summary>
+        void PickLook()
+        {
+            look = null;
+            if (looks == null || looks.Length == 0) return;
+            look = looks[UnityEngine.Random.Range(0, looks.Length)];
+            foreach (var l in looks)
+                if (l?.Root != null) l.Root.SetActive(l == look);
+            if (look.Head != null) head = look.Head;
+            if (bubble != null)
+            {
+                var p = bubble.transform.localPosition;
+                bubble.transform.localPosition = new Vector3(p.x, look.Height + bubbleGap, p.z);
+            }
+        }
+
         void UpdateFace()
         {
-            if (faceRenderer == null || Cycle == null) return;
+            if (Cycle == null) return;
+            if (look != null)
+            {
+                look.ShowMood(Cycle.Mood);
+                return;
+            }
+            if (faceRenderer == null) return;
             var mood = Cycle.Mood;
             SetColor(faceRenderer, mood == CustomerMood.Happy ? happyColor : mood == CustomerMood.Angry ? angryColor : neutralColor);
         }

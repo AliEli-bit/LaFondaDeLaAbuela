@@ -9,7 +9,7 @@ using Fonda;
 
 /// <summary>
 /// Creates the gameplay content for the Fonda scene: ingredient/recipe data assets for the menu in CLAUDE.md §5,
-/// ingredient prefabs and dispensers on an arc of the curved bar, three seats with one tray each, a customer prefab
+/// ingredient prefabs and dispensers in a row on the straight bar, three seats with one tray each, a customer prefab
 /// and the customer spawner. Called from <see cref="FondaSceneBuilder.Build"/>. Assets are created or updated in place.
 /// </summary>
 public static class FondaCoreLoopBuilder
@@ -22,12 +22,14 @@ public static class FondaCoreLoopBuilder
     const string CoinPrefabPath = "Assets/Prefabs/TipCoin.prefab";
 
     // ---- Layout (GDD §5 "Distribución de la estación"; meters, player at the origin facing +z,
-    //      angles in degrees measured from +z, negative to the left) --------------------------
-    const float DispenserRadius = 0.33f;
-    const float TrayRadius = 0.50f;
-    const float SeatRadius = 1.00f;
+    //      x to the right). Straight bar: dispensers in a row, one tray per seat. The side trays sit
+    //      toward the centre (x = ±0.34) so their outer slot stays within reach. ------------------
+    const float DispenserZ = 0.24f;
+    const float TrayZ = 0.40f;
+    const float SeatZ = 0.95f;
     // Seats in the order they are offered to customers: center, left, right (A4).
-    static readonly float[] SeatAngles = { 0f, -40f, 40f };
+    static readonly float[] TrayX = { 0f, -0.34f, 0.34f };
+    static readonly float[] SeatX = { 0f, -0.60f, 0.60f };
     static readonly string[] SeatNames = { "Center", "Left", "Right" };
 
     const float SlotSpacing = 0.10f;         // along the tray, which faces the player
@@ -43,14 +45,13 @@ public static class FondaCoreLoopBuilder
     const float SocketRadius = 0.045f;
 
     // Tips (GDD §5 "Propinas en mano"; tips A2, A5).
-    const float TipJarRadius = 0.45f;
-    const float TipJarAngle = 78f;
+    static readonly Vector2 TipJarXZ = new Vector2(0.53f, 0.24f); // right end of the bar
     const float JarInnerRadius = 0.06f;
     const float JarHeight = 0.14f;
     const float JarWall = 0.01f;
     const int JarWallSegments = 12;
-    // Center seat: in front of its tray; side seats: past the outer end of their tray (no gap between trays).
-    static readonly (float radius, float angle)[] CoinSpots = { (0.39f, 0f), (0.50f, -65f), (0.50f, 65f) };
+    // On the customers' side of each tray; the side spots lean toward the centre to stay within reach.
+    static readonly Vector2[] CoinSpots = { new Vector2(0f, 0.56f), new Vector2(-0.22f, 0.53f), new Vector2(0.22f, 0.53f) };
     const float MinTipToOthers = 0.10f;    // coin spots and jar vs dispensers, slots and each other
     const float CoinDiameter = 0.04f;
     const float CoinThickness = 0.008f;
@@ -63,29 +64,27 @@ public static class FondaCoreLoopBuilder
     const float WallClockDepth = 0.04f;
     static readonly Vector3 SummaryPosition = new Vector3(0f, 1.45f, 1.30f);
 
-    const float StoolHeight = 0.65f;
-    const float StoolRadius = 0.18f;
 
     class IngredientDef
     {
         public string Id, DisplayName;
         public string FileName => DisplayName.Replace("ó", "o");
-        public float Angle;    // position on the ingredient arc
+        public float X;        // position along the dispenser row
         public PrimitiveType Shape;
         public Vector3 Size;   // world size in meters (a cylinder primitive is 2 units tall, handled in the prefab)
         public Color Color;
     }
 
-    // Left to right as in the GDD: lechuga (−70°), tomate (−42°), queso (−14°), medallón (14°), lomito (42°), papas (70°).
+    // Left to right as in the GDD: lechuga, tomate, queso, medallón, lomito, papas, 0.16 m apart.
     // Placeholder primitives until the KayKit models are imported.
     static readonly IngredientDef[] Ingredients =
     {
-        new IngredientDef { Id = "lechuga",  DisplayName = "Lechuga",  Angle = -70f, Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.015f, 0.08f), Color = new Color(0.45f, 0.78f, 0.30f) },
-        new IngredientDef { Id = "tomate",   DisplayName = "Tomate",   Angle = -42f, Shape = PrimitiveType.Cylinder, Size = new Vector3(0.06f, 0.015f, 0.06f), Color = new Color(0.88f, 0.20f, 0.15f) },
-        new IngredientDef { Id = "queso",    DisplayName = "Queso",    Angle = -14f, Shape = PrimitiveType.Cube,     Size = new Vector3(0.07f, 0.012f, 0.07f), Color = new Color(1.00f, 0.80f, 0.20f) },
-        new IngredientDef { Id = "medallon", DisplayName = "Medallón", Angle =  14f, Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.02f, 0.08f),  Color = new Color(0.40f, 0.24f, 0.13f) },
-        new IngredientDef { Id = "lomito",   DisplayName = "Lomito",   Angle =  42f, Shape = PrimitiveType.Cube,     Size = new Vector3(0.08f, 0.025f, 0.05f), Color = new Color(0.65f, 0.30f, 0.22f) },
-        new IngredientDef { Id = "papas",    DisplayName = "Papas",    Angle =  70f, Shape = PrimitiveType.Cube,     Size = new Vector3(0.06f, 0.03f, 0.05f),  Color = new Color(0.96f, 0.86f, 0.52f) },
+        new IngredientDef { Id = "lechuga",  DisplayName = "Lechuga",  X = -0.40f, Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.015f, 0.08f), Color = new Color(0.45f, 0.78f, 0.30f) },
+        new IngredientDef { Id = "tomate",   DisplayName = "Tomate",   X = -0.24f, Shape = PrimitiveType.Cylinder, Size = new Vector3(0.06f, 0.015f, 0.06f), Color = new Color(0.88f, 0.20f, 0.15f) },
+        new IngredientDef { Id = "queso",    DisplayName = "Queso",    X = -0.08f, Shape = PrimitiveType.Cube,     Size = new Vector3(0.07f, 0.012f, 0.07f), Color = new Color(1.00f, 0.80f, 0.20f) },
+        new IngredientDef { Id = "medallon", DisplayName = "Medallón", X =  0.08f, Shape = PrimitiveType.Cylinder, Size = new Vector3(0.08f, 0.02f, 0.08f),  Color = new Color(0.40f, 0.24f, 0.13f) },
+        new IngredientDef { Id = "lomito",   DisplayName = "Lomito",   X =  0.24f, Shape = PrimitiveType.Cube,     Size = new Vector3(0.08f, 0.025f, 0.05f), Color = new Color(0.65f, 0.30f, 0.22f) },
+        new IngredientDef { Id = "papas",    DisplayName = "Papas",    X =  0.40f, Shape = PrimitiveType.Cube,     Size = new Vector3(0.06f, 0.03f, 0.05f),  Color = new Color(0.96f, 0.86f, 0.52f) },
     };
 
     class RecipeDef
@@ -108,35 +107,36 @@ public static class FondaCoreLoopBuilder
 
     // ---- Layout math (S1) -----------------------------------------------------------------
 
-    /// <summary>Point on the floor plane at <paramref name="radius"/> from the player and <paramref name="degrees"/> from +z.</summary>
-    public static Vector3 Polar(float radius, float degrees) =>
-        new Vector3(radius * Mathf.Sin(degrees * Mathf.Deg2Rad), 0f, radius * Mathf.Cos(degrees * Mathf.Deg2Rad));
-
-    /// <summary>Rotation whose forward points away from the player at that angle (its right runs along the arc).</summary>
-    static Quaternion Outward(float degrees) => Quaternion.Euler(0f, degrees, 0f);
+    static Vector3 OnFloor(float x, float z) => new Vector3(x, 0f, z);
 
     public static Vector3 DispenserPosition(string id)
     {
         foreach (var def in Ingredients)
-            if (def.Id == id) return Polar(DispenserRadius, def.Angle);
+            if (def.Id == id) return OnFloor(def.X, DispenserZ);
         throw new System.ArgumentException("Unknown ingredient " + id);
     }
 
-    public static Vector3 TrayPosition(int seat) => Polar(TrayRadius, SeatAngles[seat]);
-    public static Vector3 SeatPosition(int seat) => Polar(SeatRadius, SeatAngles[seat]);
+    public static Vector3 TrayPosition(int seat) => OnFloor(TrayX[seat], TrayZ);
+    public static Vector3 SeatPosition(int seat) => OnFloor(SeatX[seat], SeatZ);
 
-    /// <summary>"Frasco de propinas en el extremo derecho de la barra (78°, a 0,45)".</summary>
-    public static Vector3 TipJarPosition() => Polar(TipJarRadius, TipJarAngle);
+    /// <summary>"Frasco de propinas en el extremo derecho de la barra".</summary>
+    public static Vector3 TipJarPosition() => OnFloor(TipJarXZ.x, TipJarXZ.y);
 
-    /// <summary>Where each seat's customer leaves coins: next to its tray without covering it (tips A2).</summary>
     /// <summary>Center of the wall clock face (S1): on the back wall, 2.20 m high.</summary>
     public static Vector3 WallClockPosition() =>
         new Vector3(WallClockX, WallClockHeight, FondaSceneBuilder.BackWallZ - WallClockDepth / 2f);
 
-    public static Vector3 CoinSpotPosition(int seat) => Polar(CoinSpots[seat].radius, CoinSpots[seat].angle);
+    /// <summary>Where each seat's customer leaves coins: next to its tray without covering it (tips A2).</summary>
+    public static Vector3 CoinSpotPosition(int seat) => OnFloor(CoinSpots[seat].x, CoinSpots[seat].y);
 
+    // Slots run along x, facing the player.
     static Vector3 SlotPosition(int seat, int slot) =>
-        TrayPosition(seat) + Outward(SeatAngles[seat]) * new Vector3((slot - (SlotCount - 1) / 2f) * SlotSpacing, 0f, 0f);
+        TrayPosition(seat) + new Vector3((slot - (SlotCount - 1) / 2f) * SlotSpacing, 0f, 0f);
+
+    /// <summary>True when the point is on the bar top, at least BarEdgeMargin from every edge.</summary>
+    static bool OnBarTop(Vector3 p) =>
+        Mathf.Abs(p.x) <= FondaSceneBuilder.BarHalfLength - BarEdgeMargin &&
+        p.z >= FondaSceneBuilder.BarNearZ + BarEdgeMargin && p.z <= FondaSceneBuilder.BarFarZ - BarEdgeMargin;
 
     /// <summary>Returns every violated layout rule (empty when the layout is valid).</summary>
     public static List<string> ValidateLayout()
@@ -145,7 +145,7 @@ public static class FondaCoreLoopBuilder
         var dispensers = new List<(string name, Vector3 p)>();
         var slots = new List<(string name, Vector3 p)>();
         foreach (var def in Ingredients) dispensers.Add(("dispenser " + def.Id, DispenserPosition(def.Id)));
-        for (int seat = 0; seat < SeatAngles.Length; seat++)
+        for (int seat = 0; seat < SeatNames.Length; seat++)
             for (int s = 0; s < SlotCount; s++)
                 slots.Add(("seat " + SeatNames[seat] + " slot " + (s + 1), SlotPosition(seat, s)));
 
@@ -154,12 +154,10 @@ public static class FondaCoreLoopBuilder
         {
             var xz = new Vector2(p.x, p.z);
             float reach = xz.magnitude;
-            float angle = Mathf.Atan2(p.x, p.z) * Mathf.Rad2Deg;
             if (reach >= maxReach)
                 problems.Add(name + " is " + reach.ToString("F3") + " m from the player (limit " + maxReach + " m).");
-            if (reach < FondaSceneBuilder.BarInnerRadius + BarEdgeMargin || reach > FondaSceneBuilder.BarOuterRadius - BarEdgeMargin ||
-                Mathf.Abs(angle) > FondaSceneBuilder.BarHalfAngle)
-                problems.Add(name + " at r " + reach.ToString("F3") + ", " + angle.ToString("F1") + "° is off the bar top.");
+            if (!OnBarTop(p))
+                problems.Add(name + " at (" + p.x.ToString("F2") + ", " + p.z.ToString("F2") + ") is off the bar top.");
         }
 
         foreach (var (dName, d) in dispensers)
@@ -172,16 +170,14 @@ public static class FondaCoreLoopBuilder
 
         // Tips: coin spots and the jar on the bar, within reach and clear of dispensers, slots and each other.
         var tipPoints = new List<(string name, Vector3 p)> { ("tip jar", TipJarPosition()) };
-        for (int seat = 0; seat < SeatAngles.Length; seat++) tipPoints.Add(("coin spot " + SeatNames[seat], CoinSpotPosition(seat)));
+        for (int seat = 0; seat < SeatNames.Length; seat++) tipPoints.Add(("coin spot " + SeatNames[seat], CoinSpotPosition(seat)));
         foreach (var (name, p) in tipPoints)
         {
             float reach = new Vector2(p.x, p.z).magnitude;
-            float angle = Mathf.Atan2(p.x, p.z) * Mathf.Rad2Deg;
             if (reach >= maxReach)
                 problems.Add(name + " is " + reach.ToString("F3") + " m from the player (limit " + maxReach + " m).");
-            if (reach < FondaSceneBuilder.BarInnerRadius + BarEdgeMargin || reach > FondaSceneBuilder.BarOuterRadius - BarEdgeMargin ||
-                Mathf.Abs(angle) > FondaSceneBuilder.BarHalfAngle)
-                problems.Add(name + " at r " + reach.ToString("F3") + ", " + angle.ToString("F1") + "° is off the bar top.");
+            if (!OnBarTop(p))
+                problems.Add(name + " at (" + p.x.ToString("F2") + ", " + p.z.ToString("F2") + ") is off the bar top.");
             foreach (var (other, q) in dispensers.Concat(slots).Concat(tipPoints))
             {
                 if (other == name) continue;
@@ -225,13 +221,13 @@ public static class FondaCoreLoopBuilder
         foreach (var def in Recipes) menu.Add(CreateOrUpdateRecipe(def, data));
 
         var coinPrefab = BuildCoinPrefab();
-        var seats = new BarSeat[SeatAngles.Length];
+        var seats = new BarSeat[SeatNames.Length];
         for (int i = 0; i < seats.Length; i++)
             seats[i] = BuildSeat(root, i, BuildTray(root, i), coinPrefab);
         var tipJar = BuildTipJar(root);
         BuildDispensers(root, prefabs);
         var clock = BuildClock(root, errors);
-        var spawner = BuildSpawner(root, BuildCustomerPrefab(), seats, menu, clock, errors);
+        var spawner = BuildSpawner(root, BuildCustomerPrefab(errors), seats, menu, clock, errors);
         BuildShiftManager(root, clock, spawner, tipJar);
         AssetDatabase.SaveAssets();
     }
@@ -326,7 +322,7 @@ public static class FondaCoreLoopBuilder
         var tray = new GameObject("Tray " + SeatNames[seat]);
         tray.transform.SetParent(root, false);
         tray.transform.localPosition = TrayPosition(seat) + Vector3.up * top;
-        tray.transform.localRotation = Outward(SeatAngles[seat]); // slots run along the arc, facing the player
+        // Identity rotation: the slots run along x, facing the player.
 
         float baseWidth = (SlotCount - 1) * SlotSpacing + 0.10f;
         var baseGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -411,7 +407,6 @@ public static class FondaCoreLoopBuilder
             var go = new GameObject("Dispenser_" + def.FileName);
             go.transform.SetParent(root, false);
             go.transform.localPosition = DispenserPosition(def.Id) + Vector3.up * top;
-            go.transform.localRotation = Outward(def.Angle);
 
             var plate = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             plate.name = "Plate";
@@ -437,20 +432,13 @@ public static class FondaCoreLoopBuilder
 
     static BarSeat BuildSeat(Transform root, int seat, Tray tray, TipCoin coinPrefab)
     {
-        var stoolMat = FondaSceneBuilder.GetOrCreateMaterial("Stool", new Color(0.30f, 0.22f, 0.16f));
-
         var go = new GameObject("Seat " + SeatNames[seat]);
         go.transform.SetParent(root, false);
         go.transform.localPosition = SeatPosition(seat);
-        go.transform.localRotation = Outward(SeatAngles[seat] + 180f); // faces the player
+        go.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // faces the player
 
-        var stool = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        stool.name = "Stool";
-        stool.transform.SetParent(go.transform, false);
-        stool.transform.localScale = new Vector3(StoolRadius * 2f, StoolHeight / 2f, StoolRadius * 2f);
-        stool.transform.localPosition = new Vector3(0f, StoolHeight / 2f, 0f);
-        stool.GetComponent<Renderer>().sharedMaterial = stoolMat;
-        Object.DestroyImmediate(stool.GetComponent<Collider>()); // customers walk through it
+        // KayKit stool from the sketch look (no collider: customers walk through it).
+        FondaSketchBuilder.PlaceStool(go.transform, go.transform.position);
 
         var seatComponent = go.AddComponent<BarSeat>();
         var so = new SerializedObject(seatComponent);
@@ -460,9 +448,7 @@ public static class FondaCoreLoopBuilder
         var coinSpot = new GameObject("CoinSpot " + SeatNames[seat]).transform;
         coinSpot.SetParent(root, false);
         coinSpot.localPosition = CoinSpotPosition(seat) + Vector3.up * (FondaSceneBuilder.CounterHeight + 0.01f);
-        // The coin row runs along the spot's local x: along the arc in front of the center tray,
-        // radially (away from the neighboring tray) for the side seats.
-        coinSpot.localRotation = Outward(CoinSpots[seat].angle + (seat == 0 ? 0f : 90f));
+        // The coin row runs along the spot's local x, parallel to the bar edge.
         so.FindProperty("coinSpot").objectReferenceValue = coinSpot;
         so.FindProperty("coinPrefab").objectReferenceValue = coinPrefab;
         so.ApplyModifiedPropertiesWithoutUndo();
@@ -502,7 +488,6 @@ public static class FondaCoreLoopBuilder
         var jar = new GameObject("TipJar");
         jar.transform.SetParent(root, false);
         jar.transform.localPosition = TipJarPosition() + Vector3.up * FondaSceneBuilder.CounterHeight;
-        jar.transform.localRotation = Outward(TipJarAngle);
 
         var bottom = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         bottom.name = "Bottom";
@@ -563,8 +548,16 @@ public static class FondaCoreLoopBuilder
 
     // ---- Customers (S3-S5) ----------------------------------------------------------------
 
-    /// <summary>Blockout customer (A1): body and head primitives, a mood disc and a speech bubble. No colliders.</summary>
-    static Customer BuildCustomerPrefab()
+    const string CharacterFolder = "Assets/Art/Characters/";
+    // The chibi heads are about twice a real head; at full Blender size a seated customer fills the player's view.
+    const float CustomerLookScale = 0.75f;
+    static readonly string[] CustomerTypes = { "Office", "Grandpa", "Child", "Regular", "Worker", "Student", "Tourist", "Stingy" };
+
+    /// <summary>
+    /// Customer prefab: the 8 Blender characters under one body (one shown at random per customer) and a speech bubble.
+    /// Falls back to the blockout primitives when the characters are missing. No colliders.
+    /// </summary>
+    static Customer BuildCustomerPrefab(List<string> errors)
     {
         var skinMat = FondaSceneBuilder.GetOrCreateMaterial("CustomerSkin", new Color(0.87f, 0.68f, 0.52f));
         var bodyMat = FondaSceneBuilder.GetOrCreateMaterial("CustomerBody", new Color(0.25f, 0.45f, 0.80f));
@@ -575,12 +568,20 @@ public static class FondaCoreLoopBuilder
         var body = new GameObject("Body").transform;
         body.SetParent(root.transform, false);
 
+        var looks = BuildLooks(body, errors);
+        if (looks.Count > 0) return SaveCustomerPrefab(root, body, null, null, null, looks, BuildBubble(body, bubbleMat));
+
         var torso = Part(PrimitiveType.Capsule, "Torso", body, new Vector3(0f, 0.75f, 0f), new Vector3(0.36f, 0.55f, 0.30f), bodyMat);
         var head = Part(PrimitiveType.Sphere, "Head", body, new Vector3(0f, 1.45f, 0f), Vector3.one * 0.24f, skinMat);
         // A nose so the facing direction and the head shake read from the bar.
         Part(PrimitiveType.Sphere, "Nose", head.transform, new Vector3(0f, 0f, 0.5f), Vector3.one * 0.25f, skinMat);
         var mood = Part(PrimitiveType.Sphere, "Mood", body, new Vector3(0f, 1.66f, 0f), Vector3.one * 0.08f, faceMat);
+        return SaveCustomerPrefab(root, body, head.transform, torso.GetComponent<Renderer>(), mood.GetComponent<Renderer>(),
+            looks, BuildBubble(body, bubbleMat));
+    }
 
+    static TextMeshPro BuildBubble(Transform body, Material bubbleMat)
+    {
         var bubbleGo = new GameObject("Bubble");
         bubbleGo.transform.SetParent(body, false);
         bubbleGo.transform.localPosition = new Vector3(0f, 1.88f, 0f);
@@ -592,14 +593,77 @@ public static class FondaCoreLoopBuilder
         text.text = "Pedido";
         var back = Part(PrimitiveType.Quad, "Background", bubbleGo.transform, new Vector3(0f, 0f, 0.005f), new Vector3(0.64f, 0.22f, 1f), bubbleMat);
         back.transform.localRotation = Quaternion.identity;
+        return text;
+    }
 
+    /// <summary>One inactive instance of each Blender character under the body, with the parts Customer drives.</summary>
+    static List<CustomerLook> BuildLooks(Transform body, List<string> errors)
+    {
+        var looks = new List<CustomerLook>();
+        foreach (var type in CustomerTypes)
+        {
+            var path = CharacterFolder + "Customer_" + type + ".fbx";
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (model == null)
+            {
+                errors.Add("Missing character " + path + "; customers use the blockout figure.");
+                return new List<CustomerLook>();
+            }
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(model, body);
+            go.name = "Customer_" + type;
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one * CustomerLookScale;
+
+            var parts = go.GetComponentsInChildren<Transform>(true).ToDictionary(t => t.name, t => t);
+            Transform Find(string name)
+            {
+                if (parts.TryGetValue(name, out var t)) return t;
+                errors.Add(path + " has no " + name + ".");
+                return null;
+            }
+            var bounds = new Bounds(go.transform.position, Vector3.zero);
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true)) bounds.Encapsulate(r.bounds);
+
+            looks.Add(new CustomerLook
+            {
+                Root = go, Hips = Find("Hips"), Head = Find("Head"), LegL = Find("Leg_L"), LegR = Find("Leg_R"),
+                Happy = Find("Face_Happy")?.gameObject, Neutral = Find("Face_Neutral")?.gameObject,
+                Angry = Find("Face_Angry")?.gameObject,
+                Height = bounds.max.y - go.transform.position.y,
+            });
+            go.SetActive(false);
+        }
+        return looks;
+    }
+
+    static Customer SaveCustomerPrefab(GameObject root, Transform body, Transform head, Renderer bodyRenderer,
+        Renderer faceRenderer, List<CustomerLook> looks, TextMeshPro bubble)
+    {
         var customer = root.AddComponent<Customer>();
         var so = new SerializedObject(customer);
         so.FindProperty("body").objectReferenceValue = body;
-        so.FindProperty("head").objectReferenceValue = head.transform;
-        so.FindProperty("bodyRenderer").objectReferenceValue = torso.GetComponent<Renderer>();
-        so.FindProperty("faceRenderer").objectReferenceValue = mood.GetComponent<Renderer>();
-        so.FindProperty("bubble").objectReferenceValue = text;
+        so.FindProperty("head").objectReferenceValue = head;
+        so.FindProperty("bodyRenderer").objectReferenceValue = bodyRenderer;
+        so.FindProperty("faceRenderer").objectReferenceValue = faceRenderer;
+        so.FindProperty("bubble").objectReferenceValue = bubble;
+        so.FindProperty("seatHeight").floatValue = FondaSketchBuilder.StoolHeight;
+        var list = so.FindProperty("looks");
+        list.arraySize = looks.Count;
+        for (int i = 0; i < looks.Count; i++)
+        {
+            var e = list.GetArrayElementAtIndex(i);
+            var l = looks[i];
+            e.FindPropertyRelative("Root").objectReferenceValue = l.Root;
+            e.FindPropertyRelative("Hips").objectReferenceValue = l.Hips;
+            e.FindPropertyRelative("Head").objectReferenceValue = l.Head;
+            e.FindPropertyRelative("LegL").objectReferenceValue = l.LegL;
+            e.FindPropertyRelative("LegR").objectReferenceValue = l.LegR;
+            e.FindPropertyRelative("Happy").objectReferenceValue = l.Happy;
+            e.FindPropertyRelative("Neutral").objectReferenceValue = l.Neutral;
+            e.FindPropertyRelative("Angry").objectReferenceValue = l.Angry;
+            e.FindPropertyRelative("Height").floatValue = l.Height;
+        }
         so.ApplyModifiedPropertiesWithoutUndo();
 
         EnsureFolderPath("Assets/Prefabs");

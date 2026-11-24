@@ -8,7 +8,8 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
 /// <summary>
-/// Builds the "Fonda" blockout scene: fixed XR rig inside a curved bar, no locomotion, customers' wall behind the bar.
+/// Builds the "Fonda" scene: fixed XR rig behind a straight bar, no locomotion, dressed with the KayKit look of the
+/// sketch scene (room, kitchen behind the grandma, dining wall behind the customers).
 /// Run from the menu: Tools/Fonda/Build Fonda Scene. Safe to re-run (asks before overwriting).
 /// All dimensions are in meters; the player origin is (0,0,0) facing +Z.
 /// </summary>
@@ -20,27 +21,19 @@ public static class FondaSceneBuilder
     const string SamplesRoot = "Assets/Samples/XR Interaction Toolkit";
     const string RigPrefabName = "XR Origin (XR Rig)";
 
-    // ---- Blockout dimensions (tune here) --------------------------------------------------
-    const float FloorSize = 6f;
-
-    // Curved bar around the player (GDD §5, "Distribución de la estación"): angles measured from +Z, left negative.
+    // ---- Layout (GDD §5, "Distribución de la estación") ------------------------------------
+    // Straight bar in front of the player, who stands at the origin facing +Z.
     internal const float CounterHeight = 0.9f;
-    internal const float BarInnerRadius = 0.22f;
-    internal const float BarOuterRadius = 0.78f;
-    internal const float BarHalfAngle = 80f;
-    const int BarSegments = 32;
+    internal const float BarHalfLength = 1.05f;   // the bar runs from x = -1.05 to 1.05
+    internal const float BarNearZ = 0.16f;        // edge on the grandma's side
+    internal const float BarFarZ = 0.64f;         // edge on the customers' side
     internal const float MaxReach = 0.6f;
 
-    // Back wall behind the customers, with a door on the left.
-    internal const float BackWallZ = 2.40f;
-    const float WallWidth = 4f;
-    const float WallHeight = 2.6f;
-    const float WallThickness = 0.1f;
-    internal const float DoorCenterX = -1.0f;
-    const float DoorWidth = 0.9f;
-    const float DoorHeight = 2.1f;
-
-    const string MeshesFolder = "Assets/Meshes/Blockout";
+    // Room: 8 m wide, from the kitchen wall behind the grandma to the dining wall behind the customers.
+    internal const float RoomHalfWidth = 4.0f;
+    internal const float KitchenWallZ = -1.60f;
+    internal const float BackWallZ = 3.60f;
+    internal const float DoorCenterX = -3.0f;    // the doorway piece of the dining wall
 
     // Locomotion providers to deactivate under the "Locomotion" child of the rig (Gravity stays on).
     // "Climb Teleport" is a child of "Climb", so deactivating "Climb" covers it.
@@ -89,7 +82,6 @@ public static class FondaSceneBuilder
 
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-        CreateDirectionalLight();
 
         var rigPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(rigPath);
         var rig = (GameObject)PrefabUtility.InstantiatePrefab(rigPrefab, scene);
@@ -98,6 +90,7 @@ public static class FondaSceneBuilder
         EnsureInteractionManager();
         DisableLocomotion(rig, errors);
         var fondaRoot = BuildBlockout();
+        FondaSketchBuilder.BuildDressing(fondaRoot, errors);
         FondaCoreLoopBuilder.Build(fondaRoot, errors);
 
         Directory.CreateDirectory(Path.GetDirectoryName(ScenePath));
@@ -141,15 +134,6 @@ public static class FondaSceneBuilder
     }
 
     // ---- Scene objects --------------------------------------------------------------------
-
-    static void CreateDirectionalLight()
-    {
-        var go = new GameObject("Directional Light");
-        var light = go.AddComponent<Light>();
-        light.type = LightType.Directional;
-        light.intensity = 1f;
-        go.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
-    }
 
     static void EnsureInteractionManager()
     {
@@ -218,94 +202,31 @@ public static class FondaSceneBuilder
         Debug.LogError("[FondaSceneBuilder] " + message);
     }
 
-    // ---- S6/S7: blockout ------------------------------------------------------------------
+    // ---- S6/S7: physics blockout ----------------------------------------------------------
+    // The visible room and bar come from FondaSketchBuilder.BuildDressing (KayKit pieces have no colliders).
+    // Here only the invisible colliders the gameplay needs: a floor and the bar top that ingredients rest on.
 
     static Transform BuildBlockout()
     {
-        var floorMat = GetOrCreateMaterial("Floor", new Color(0.55f, 0.42f, 0.30f));
-        var counterMat = GetOrCreateMaterial("Counter", new Color(0.72f, 0.52f, 0.30f));
-        var wallMat = GetOrCreateMaterial("Wall", new Color(0.93f, 0.88f, 0.78f));
-
         var root = new GameObject("Fonda").transform;
 
-        var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        floor.name = "Floor";
+        var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        floor.name = "Floor Collider";
         floor.transform.SetParent(root, false);
-        floor.transform.localScale = new Vector3(FloorSize / 10f, 1f, FloorSize / 10f); // plane is 10x10 at scale 1
-        floor.GetComponent<Renderer>().sharedMaterial = floorMat;
+        float depth = BackWallZ - KitchenWallZ;
+        floor.transform.localScale = new Vector3(RoomHalfWidth * 2f, 0.1f, depth);
+        floor.transform.localPosition = new Vector3(0f, -0.05f, (KitchenWallZ + BackWallZ) / 2f);
+        UnityEngine.Object.DestroyImmediate(floor.GetComponent<MeshRenderer>());
+        UnityEngine.Object.DestroyImmediate(floor.GetComponent<MeshFilter>());
 
-        // Curved bar: a solid arc whose top is the work surface (ingredients rest on its collider).
-        var bar = new GameObject("Bar");
+        var bar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        bar.name = "Bar Collider";
         bar.transform.SetParent(root, false);
-        var mesh = GetOrCreateArcMesh("FondaBar", BarInnerRadius, BarOuterRadius, BarHalfAngle, CounterHeight, BarSegments);
-        bar.AddComponent<MeshFilter>().sharedMesh = mesh;
-        bar.AddComponent<MeshRenderer>().sharedMaterial = counterMat;
-        bar.AddComponent<MeshCollider>().sharedMesh = mesh;
-
-        // Back wall with a door gap on the left: two side panels and a lintel.
-        var wall = new GameObject("BackWall").transform;
-        wall.SetParent(root, false);
-        float left = -WallWidth / 2f, right = WallWidth / 2f;
-        float doorLeft = DoorCenterX - DoorWidth / 2f, doorRight = DoorCenterX + DoorWidth / 2f;
-        WallPanel(wall, "WallLeft", left, doorLeft, 0f, WallHeight, wallMat);
-        WallPanel(wall, "WallRight", doorRight, right, 0f, WallHeight, wallMat);
-        WallPanel(wall, "Lintel", doorLeft, doorRight, DoorHeight, WallHeight, wallMat);
-
+        bar.transform.localScale = new Vector3(BarHalfLength * 2f, CounterHeight, BarFarZ - BarNearZ);
+        bar.transform.localPosition = new Vector3(0f, CounterHeight / 2f, (BarNearZ + BarFarZ) / 2f);
+        UnityEngine.Object.DestroyImmediate(bar.GetComponent<MeshRenderer>());
+        UnityEngine.Object.DestroyImmediate(bar.GetComponent<MeshFilter>());
         return root;
-    }
-
-    static void WallPanel(Transform parent, string name, float x0, float x1, float y0, float y1, Material mat)
-    {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        go.name = name;
-        go.transform.SetParent(parent, false);
-        go.transform.localScale = new Vector3(x1 - x0, y1 - y0, WallThickness);
-        go.transform.localPosition = new Vector3((x0 + x1) / 2f, (y0 + y1) / 2f, BackWallZ + WallThickness / 2f);
-        go.GetComponent<Renderer>().sharedMaterial = mat;
-    }
-
-    /// <summary>Closed arc solid (top, outer and inner faces, end caps) saved as an asset so the scene can reference it.</summary>
-    static Mesh GetOrCreateArcMesh(string name, float rIn, float rOut, float halfAngle, float height, int segments)
-    {
-        var verts = new List<Vector3>();
-        var tris = new List<int>();
-        Vector3 P(float r, float deg, float y) =>
-            new Vector3(r * Mathf.Sin(deg * Mathf.Deg2Rad), y, r * Mathf.Cos(deg * Mathf.Deg2Rad));
-        void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
-        {
-            // a-b-c-d in clockwise order as seen from the outside (Unity front faces are clockwise).
-            int i = verts.Count;
-            verts.Add(a); verts.Add(b); verts.Add(c); verts.Add(d);
-            tris.AddRange(new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
-        }
-
-        for (int s = 0; s < segments; s++)
-        {
-            float a0 = Mathf.Lerp(-halfAngle, halfAngle, s / (float)segments);
-            float a1 = Mathf.Lerp(-halfAngle, halfAngle, (s + 1) / (float)segments);
-            Quad(P(rIn, a0, height), P(rOut, a0, height), P(rOut, a1, height), P(rIn, a1, height)); // top
-            Quad(P(rOut, a0, 0f), P(rOut, a1, 0f), P(rOut, a1, height), P(rOut, a0, height));       // outer
-            Quad(P(rIn, a1, 0f), P(rIn, a0, 0f), P(rIn, a0, height), P(rIn, a1, height));           // inner
-        }
-        Quad(P(rIn, -halfAngle, 0f), P(rOut, -halfAngle, 0f), P(rOut, -halfAngle, height), P(rIn, -halfAngle, height)); // left cap
-        Quad(P(rOut, halfAngle, 0f), P(rIn, halfAngle, 0f), P(rIn, halfAngle, height), P(rOut, halfAngle, height));     // right cap
-
-        EnsureFolder("Assets", "Meshes");
-        EnsureFolder("Assets/Meshes", "Blockout");
-        var path = MeshesFolder + "/" + name + ".asset";
-        var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-        if (mesh == null)
-        {
-            mesh = new Mesh { name = name };
-            AssetDatabase.CreateAsset(mesh, path);
-        }
-        mesh.Clear();
-        mesh.SetVertices(verts);
-        mesh.SetTriangles(tris, 0);
-        mesh.RecalculateNormals();
-        mesh.RecalculateBounds();
-        EditorUtility.SetDirty(mesh);
-        return mesh;
     }
 
     // ---- Materials (A3) -------------------------------------------------------------------

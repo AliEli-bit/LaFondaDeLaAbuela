@@ -157,8 +157,8 @@ namespace Fonda.Tests
         {
             var p = FondaCoreLoopBuilder.WallClockPosition();
             Assert.AreEqual(2.20f, p.y, 1e-3f);
-            Assert.Less(p.z, 2.40f);
-            Assert.Greater(p.z, 2.30f);
+            Assert.Less(p.z, 3.60f);
+            Assert.Greater(p.z, 3.50f);
         }
     }
 }
