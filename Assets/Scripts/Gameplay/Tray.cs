@@ -49,6 +49,9 @@ namespace Fonda
 
         public RecipeData Order => order;
 
+        /// <summary>True while a correct tray is flashing and being emptied (the delivery is in progress).</summary>
+        public bool IsDelivering => busy;
+
         void OnEnable() => Subscribe();
 
         void Start() => ApplyOrder();
@@ -59,7 +62,10 @@ namespace Fonda
             busy = false;
         }
 
-        /// <summary>Sets the active order (e.g. from a customer), emptying the tray, showing its base and enabling N slots.</summary>
+        /// <summary>
+        /// Sets the active order (e.g. from a customer), emptying the tray, showing its base and enabling N slots.
+        /// Null closes the tray: no slots, no base.
+        /// </summary>
         public void SetOrder(RecipeData recipe)
         {
             order = recipe;

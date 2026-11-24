@@ -2,7 +2,8 @@
     "name": "Fonda.Runtime",
     "rootNamespace": "Fonda",
     "references": [
-        "Unity.XR.Interaction.Toolkit"
+        "Unity.XR.Interaction.Toolkit",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
