@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -45,6 +46,30 @@ namespace Fonda
             if (Application.isPlaying) Destroy(coin.gameObject);
             else DestroyImmediate(coin.gameObject);
             return true;
+        }
+
+        /// <summary>
+        /// End of shift (S4): adds every coin not yet counted, wherever it is, and removes it. Returns the amount added.
+        /// </summary>
+        public int BankLeftovers(IEnumerable<TipCoin> leftovers)
+        {
+            int added = 0;
+            if (leftovers == null) return 0;
+            foreach (var coin in leftovers)
+            {
+                if (coin == null || !coin.MarkBanked()) continue;
+                added += coin.Value;
+                coins++;
+                if (Application.isPlaying) Destroy(coin.gameObject);
+                else DestroyImmediate(coin.gameObject);
+            }
+            if (added == 0) return 0;
+            Total += added;
+            Refresh();
+            Debug.Log("[TipJar] Monedas de la barra sumadas al cierre: +" + added + " (total " + Total + ")");
+            TipBanked?.Invoke(added, Total);
+            onTipBanked?.Invoke();
+            return added;
         }
 
         void Refresh()

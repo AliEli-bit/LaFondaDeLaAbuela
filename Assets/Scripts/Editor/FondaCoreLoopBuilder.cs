@@ -55,6 +55,14 @@ public static class FondaCoreLoopBuilder
     const float CoinDiameter = 0.04f;
     const float CoinThickness = 0.008f;
 
+    // ---- Shift (shift S1, S3) ---------------------------------------------------------------
+    const string DifficultyPath = "Assets/Data/DifficultySettings.asset";
+    const float WallClockX = 0.6f;          // right of the center seat, away from the door
+    const float WallClockHeight = 2.20f;
+    const float WallClockDiameter = 0.40f;
+    const float WallClockDepth = 0.04f;
+    static readonly Vector3 SummaryPosition = new Vector3(0f, 1.45f, 1.30f);
+
     const float StoolHeight = 0.65f;
     const float StoolRadius = 0.18f;
 
@@ -121,6 +129,10 @@ public static class FondaCoreLoopBuilder
     public static Vector3 TipJarPosition() => Polar(TipJarRadius, TipJarAngle);
 
     /// <summary>Where each seat's customer leaves coins: next to its tray without covering it (tips A2).</summary>
+    /// <summary>Center of the wall clock face (S1): on the back wall, 2.20 m high.</summary>
+    public static Vector3 WallClockPosition() =>
+        new Vector3(WallClockX, WallClockHeight, FondaSceneBuilder.BackWallZ - WallClockDepth / 2f);
+
     public static Vector3 CoinSpotPosition(int seat) => Polar(CoinSpots[seat].radius, CoinSpots[seat].angle);
 
     static Vector3 SlotPosition(int seat, int slot) =>
@@ -216,9 +228,11 @@ public static class FondaCoreLoopBuilder
         var seats = new BarSeat[SeatAngles.Length];
         for (int i = 0; i < seats.Length; i++)
             seats[i] = BuildSeat(root, i, BuildTray(root, i), coinPrefab);
-        BuildTipJar(root);
+        var tipJar = BuildTipJar(root);
         BuildDispensers(root, prefabs);
-        BuildSpawner(root, BuildCustomerPrefab(), seats, menu, errors);
+        var clock = BuildClock(root, errors);
+        var spawner = BuildSpawner(root, BuildCustomerPrefab(), seats, menu, clock, errors);
+        BuildShiftManager(root, clock, spawner, tipJar);
         AssetDatabase.SaveAssets();
     }
 
@@ -480,7 +494,7 @@ public static class FondaCoreLoopBuilder
     }
 
     /// <summary>Open jar: a ring of wall boxes on a base, a trigger inside that counts coins, a pile and a label.</summary>
-    static void BuildTipJar(Transform root)
+    static TipJar BuildTipJar(Transform root)
     {
         var glassMat = FondaSceneBuilder.GetOrCreateMaterial("TipJar", new Color(0.65f, 0.82f, 0.90f));
         var coinMat = FondaSceneBuilder.GetOrCreateMaterial("Coin", new Color(0.95f, 0.75f, 0.20f));
@@ -544,6 +558,7 @@ public static class FondaCoreLoopBuilder
         so.FindProperty("label").objectReferenceValue = label;
         so.FindProperty("pile").objectReferenceValue = pile.transform;
         so.ApplyModifiedPropertiesWithoutUndo();
+        return tipJar;
     }
 
     // ---- Customers (S3-S5) ----------------------------------------------------------------
@@ -605,7 +620,8 @@ public static class FondaCoreLoopBuilder
         return go;
     }
 
-    static void BuildSpawner(Transform root, Customer prefab, BarSeat[] seats, List<RecipeData> menu, List<string> errors)
+    static CustomerSpawner BuildSpawner(Transform root, Customer prefab, BarSeat[] seats, List<RecipeData> menu,
+        FondaClock clock, List<string> errors)
     {
         var door = new GameObject("Door").transform;
         door.SetParent(root, false);
@@ -618,6 +634,7 @@ public static class FondaCoreLoopBuilder
         var so = new SerializedObject(spawner);
         so.FindProperty("customerPrefab").objectReferenceValue = prefab;
         so.FindProperty("door").objectReferenceValue = door;
+        so.FindProperty("clock").objectReferenceValue = clock;
         var seatsProp = so.FindProperty("seats");
         seatsProp.arraySize = seats.Length;
         for (int i = 0; i < seats.Length; i++) seatsProp.GetArrayElementAtIndex(i).objectReferenceValue = seats[i];
@@ -628,6 +645,95 @@ public static class FondaCoreLoopBuilder
 
         if (prefab == null) errors.Add("Customer prefab could not be saved at " + CustomerPrefabPath + ".");
         if (menu.Count != Recipes.Length) errors.Add("Menu has " + menu.Count + " recipes, expected " + Recipes.Length + ".");
+        return spawner;
+    }
+
+    // ---- Shift: clock, wall clock and summary (shift S1, S3, S5) ------------------------------
+
+    /// <summary>Balance asset (A7): created with the GDD defaults only when missing, so hand-tuned values survive.</summary>
+    static DifficultySettings GetOrCreateDifficulty()
+    {
+        var asset = AssetDatabase.LoadAssetAtPath<DifficultySettings>(DifficultyPath);
+        if (asset != null) return asset;
+        EnsureFolderPath("Assets/Data");
+        asset = ScriptableObject.CreateInstance<DifficultySettings>();
+        AssetDatabase.CreateAsset(asset, DifficultyPath);
+        return asset;
+    }
+
+    /// <summary>Round wall clock on the back wall with hour and minute hands, driven by <see cref="FondaClock"/>.</summary>
+    static FondaClock BuildClock(Transform root, List<string> errors)
+    {
+        var settings = GetOrCreateDifficulty();
+        if (settings == null) errors.Add("DifficultySettings could not be saved at " + DifficultyPath + ".");
+
+        var faceMat = FondaSceneBuilder.GetOrCreateMaterial("ClockFace", new Color(0.97f, 0.95f, 0.88f));
+        var handMat = FondaSceneBuilder.GetOrCreateMaterial("ClockHand", new Color(0.15f, 0.12f, 0.10f));
+
+        var go = new GameObject("WallClock");
+        go.transform.SetParent(root, false);
+        go.transform.localPosition = WallClockPosition();
+
+        // Cylinder lying with its axis along z: a disc facing the player.
+        var face = Part(PrimitiveType.Cylinder, "Face", go.transform, Vector3.zero,
+            new Vector3(WallClockDiameter, WallClockDepth / 2f, WallClockDiameter), faceMat);
+        face.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+
+        float front = -WallClockDepth / 2f - 0.005f;
+        for (int i = 0; i < 12; i++)
+        {
+            float a = i * 30f;
+            var tick = Part(PrimitiveType.Cube, "Tick " + i, go.transform, Vector3.zero,
+                new Vector3(0.012f, i % 3 == 0 ? 0.04f : 0.02f, 0.005f), handMat);
+            tick.transform.localRotation = Quaternion.Euler(0f, 0f, -a);
+            tick.transform.localPosition = tick.transform.localRotation * new Vector3(0f, WallClockDiameter * 0.42f, 0f) +
+                                           new Vector3(0f, 0f, front);
+        }
+
+        var hourHand = Hand(go.transform, "HourHand", 0.10f, 0.016f, front - 0.004f, handMat);
+        var minuteHand = Hand(go.transform, "MinuteHand", 0.16f, 0.010f, front - 0.010f, handMat);
+
+        var clock = go.AddComponent<FondaClock>();
+        var so = new SerializedObject(clock);
+        so.FindProperty("settings").objectReferenceValue = settings;
+        so.FindProperty("hourHand").objectReferenceValue = hourHand;
+        so.FindProperty("minuteHand").objectReferenceValue = minuteHand;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        return clock;
+    }
+
+    /// <summary>A pivot at the clock center with a bar pointing to 12 o'clock (local +y).</summary>
+    static Transform Hand(Transform clock, string name, float length, float width, float z, Material mat)
+    {
+        var pivot = new GameObject(name).transform;
+        pivot.SetParent(clock, false);
+        pivot.localPosition = new Vector3(0f, 0f, z);
+        Part(PrimitiveType.Cube, "Bar", pivot, new Vector3(0f, length / 2f, 0f), new Vector3(width, length, 0.004f), mat);
+        return pivot;
+    }
+
+    static void BuildShiftManager(Transform root, FondaClock clock, CustomerSpawner spawner, TipJar tipJar)
+    {
+        var labelGo = new GameObject("ShiftSummary");
+        labelGo.transform.SetParent(root, false);
+        labelGo.transform.localPosition = SummaryPosition; // forward is +z: readable from the player
+        var label = labelGo.AddComponent<TextMeshPro>();
+        label.rectTransform.sizeDelta = new Vector2(1.2f, 0.6f);
+        label.fontSize = 1.2f;
+        label.alignment = TextAlignmentOptions.Center;
+        label.color = new Color(0.20f, 0.15f, 0.10f);
+        label.text = "¡Se terminó el turno!";
+
+        var go = new GameObject("ShiftManager");
+        go.transform.SetParent(root, false);
+        var manager = go.AddComponent<ShiftManager>();
+        var so = new SerializedObject(manager);
+        so.FindProperty("clock").objectReferenceValue = clock;
+        so.FindProperty("spawner").objectReferenceValue = spawner;
+        so.FindProperty("tipJar").objectReferenceValue = tipJar;
+        so.FindProperty("summaryLabel").objectReferenceValue = label;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        labelGo.SetActive(false);
     }
 
     // ---- Helpers --------------------------------------------------------------------------

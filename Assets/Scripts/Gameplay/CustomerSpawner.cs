@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Fonda
 {
     /// <summary>
-    /// Sends customers through the door to the first free seat (S5). Without the Fonda clock yet, the arrival
-    /// interval, the simultaneous limit, patience and eating time are fixed serialized values (GDD values at t = 0).
+    /// Sends customers through the door to the first free seat (S5). The Fonda clock sets the pace (shift S2): the
+    /// interval, the patience and the ingredients per order follow <c>t</c>, the limit of customers at once follows the
+    /// scene, and no one comes in once the time is up.
     /// </summary>
     public class CustomerSpawner : MonoBehaviour
     {
@@ -14,54 +17,63 @@ namespace Fonda
         [SerializeField] BarSeat[] seats;
         [SerializeField] RecipeData[] menu;
         [SerializeField] Transform door;
-
-        [Header("Balance (GDD values at t = 0)")]
-        [SerializeField] float firstArrivalSeconds = 2f;
-        [SerializeField] float arrivalIntervalSeconds = 12f;
-        [SerializeField] int maxSimultaneous = 1;
-        [SerializeField] float patienceSeconds = 25f;
-        [SerializeField] float eatSeconds = 3f;
+        [SerializeField] FondaClock clock;
 
         readonly List<Customer> active = new List<Customer>();
         readonly List<bool> occupied = new List<bool>();
+        readonly List<int> ingredientCounts = new List<int>();
         float untilNext;
+
+        /// <summary>Raised when a customer walks out the door, served or angry.</summary>
+        public event Action<Customer> CustomerLeft;
 
         public IReadOnlyList<Customer> Active => active;
 
         void Start()
         {
-            untilNext = firstArrivalSeconds;
-            if (customerPrefab == null || door == null || seats == null || seats.Length == 0 || menu == null || menu.Length == 0)
+            if (customerPrefab == null || door == null || seats == null || seats.Length == 0 || menu == null ||
+                menu.Length == 0 || clock == null || clock.Settings == null)
             {
-                Debug.LogError("[CustomerSpawner] Missing prefab, door, seats or menu.", this);
+                Debug.LogError("[CustomerSpawner] Missing prefab, door, seats, menu or clock.", this);
                 enabled = false;
+                return;
             }
+            untilNext = clock.Settings.FirstArrivalSeconds;
+            foreach (var recipe in menu) ingredientCounts.Add(recipe != null ? recipe.Ingredients.Count : 0);
         }
 
         void Update()
         {
+            if (clock.HasEnded) return; // time is up: no more arrivals
             untilNext -= Time.deltaTime;
-            if (untilNext > 0f || active.Count >= maxSimultaneous) return;
+            if (untilNext > 0f || active.Count >= clock.Settings.MaxCustomers(clock.Phase)) return;
 
             occupied.Clear();
             foreach (var seat in seats) occupied.Add(seat == null || !seat.IsFree);
             int index = SeatRule.FirstFree(occupied);
             if (index < 0) return; // every seat is taken: wait until one is freed
 
-            Spawn(seats[index]);
-            untilNext = arrivalIntervalSeconds;
+            float t = clock.T;
+            Spawn(seats[index], t);
+            untilNext = clock.Settings.IntervalAt(t);
         }
 
-        void Spawn(BarSeat seat)
+        void Spawn(BarSeat seat, float t)
         {
-            var recipe = menu[Random.Range(0, menu.Length)];
+            var settings = clock.Settings;
+            var candidates = MenuRule.Candidates(ingredientCounts, settings.IngredientsAt(t));
+            var recipe = menu[candidates[Random.Range(0, candidates.Count)]];
             var customer = Instantiate(customerPrefab, door.position, door.rotation);
             seat.Claim(customer);
             customer.Left += OnCustomerLeft;
-            customer.Init(recipe, seat, door.position, patienceSeconds, eatSeconds);
+            customer.Init(recipe, seat, door.position, settings.PatienceAt(t), settings.EatSeconds);
             active.Add(customer);
         }
 
-        void OnCustomerLeft(Customer customer) => active.Remove(customer);
+        void OnCustomerLeft(Customer customer)
+        {
+            active.Remove(customer);
+            CustomerLeft?.Invoke(customer);
+        }
     }
 }
