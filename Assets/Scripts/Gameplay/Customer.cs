@@ -133,6 +133,8 @@ namespace Fonda
                 ShowBubble(null);
                 Debug.Log("[Customer] Terminó de comer y se va de " + Seat.name);
             }
+            int coins = Seat.LeaveTip(Cycle).Count;
+            if (coins > 0) Debug.Log("[Customer] Deja " + coins + " moneda(s) junto a la bandeja de " + Seat.name);
             ReleaseSeat();
         }
 

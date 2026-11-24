@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -14,6 +15,20 @@ namespace Fonda
         [SerializeField] Tray tray;
         [Tooltip("Where the customer stands to sit down; its forward axis faces the player.")]
         [SerializeField] Transform seatPoint;
+
+        [Header("Tip (tips S1)")]
+        [Tooltip("Where this seat's customer leaves coins, next to the tray without covering it.")]
+        [SerializeField] Transform coinSpot;
+        [SerializeField] TipCoin coinPrefab;
+        [SerializeField] int minCoins = 1;
+        [SerializeField] int maxCoins = 3;
+
+        // Coins form a row along the spot's local x axis (the builder points it away from the tray).
+        static readonly Vector3[] CoinOffsets =
+        {
+            new Vector3(0f, 0f, 0f), new Vector3(0.045f, 0f, 0f), new Vector3(-0.045f, 0f, 0f),
+            new Vector3(0.09f, 0f, 0f), new Vector3(-0.09f, 0f, 0f),
+        };
 
         public UnityEvent onFreed;
         public event Action<BarSeat> Freed;
@@ -35,6 +50,23 @@ namespace Fonda
             if (tray == null) return;
             tray.OrderCorrect -= OnOrderCorrect;
             tray.OrderWrong -= OnOrderWrong;
+        }
+
+        /// <summary>
+        /// Drops the tip of a customer who is leaving: coins by the patience left when served, none if they left angry.
+        /// Coins nobody picks up just stay on the bar (S4).
+        /// </summary>
+        public List<TipCoin> LeaveTip(CustomerCycle cycle)
+        {
+            var dropped = new List<TipCoin>();
+            if (coinPrefab == null || coinSpot == null) return dropped;
+            int count = TipRule.CoinsFor(cycle, minCoins, maxCoins);
+            for (int i = 0; i < count; i++)
+            {
+                var offset = coinSpot.rotation * CoinOffsets[i % CoinOffsets.Length] + Vector3.up * 0.01f * (i / CoinOffsets.Length);
+                dropped.Add(Instantiate(coinPrefab, coinSpot.position + offset, coinSpot.rotation));
+            }
+            return dropped;
         }
 
         /// <summary>Reserves the seat for a customer who is walking to it.</summary>
