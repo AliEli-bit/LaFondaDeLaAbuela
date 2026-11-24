@@ -30,10 +30,10 @@ Rama: `feat/bar-customer` (desde `feat/core-loop`, sin pushear). Entrega: `singl
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S3, S4, A6 | inline por el padre (sin razón de escritor): regla pura `CustomerCycle` (estados, paciencia, comer, irse enojado), carita y elección de asiento, con tests RED antes | hecho: RED 9 (`NotImplementedException`), GREEN 9/9 | (ver L7) |
-| T2 | S2, S3, S5, A1–A4, A7 | inline: `BarSeat`, `Customer`, `CustomerSpawner`, globo y carita; `Tray` sin pedido hasta que se sienta alguien | hecho: prueba en Play (L6) | (ver L7) |
-| T3 | S1 | inline: builder de la barra curva, arcos de ingredientes, 3 bandejas, 3 asientos, pared y puerta, chequeo de alcance | hecho: RED 9 (stubs en cero), GREEN; builder `errors: 0` | (ver L7) |
-| T4 | S6 | padre vía computer-use: compilar, tests, builder, prueba en Play | hecho: 35/35, prueba en Play (L6); falta la prueba a mano | (ver L7) |
+| T1 | S3, S4, A6 | inline por el padre (sin razón de escritor): regla pura `CustomerCycle` (estados, paciencia, comer, irse enojado), carita y elección de asiento, con tests RED antes | hecho: RED 9 (`NotImplementedException`), GREEN 9/9 | bf54d94, 349e4de |
+| T2 | S2, S3, S5, A1–A4, A7 | inline: `BarSeat`, `Customer`, `CustomerSpawner`, globo y carita; `Tray` sin pedido hasta que se sienta alguien | hecho: prueba en Play (L6) | bf54d94, 349e4de |
+| T3 | S1 | inline: builder de la barra curva, arcos de ingredientes, 3 bandejas, 3 asientos, pared y puerta, chequeo de alcance | hecho: RED 9 (stubs en cero), GREEN; builder `errors: 0` | bf54d94, 349e4de |
+| T4 | S6 | padre vía computer-use: compilar, tests, builder, prueba en Play | hecho: 35/35, prueba en Play (L6); falta la prueba a mano | bf54d94, 349e4de |
 
 ## Log
 
@@ -44,3 +44,4 @@ Rama: `feat/bar-customer` (desde `feat/core-loop`, sin pushear). Entrega: `singl
 - **L5 (2026-11-23, GREEN y decisiones de layout):** 35/35. Para que las bandejas de asientos vecinos no se pisen, las ranuras van a 0,10 m entre sí (antes 0,15) con radio de socket 0,045 m y bandejas de 0,30 × 0,14 m; la validación del builder ahora también chequea que ninguna ranura se superponga con otra y que todo esté sobre la barra. La barra es una malla de arco propia con `MeshCollider` (`Assets/Meshes/Blockout/FondaBar.asset`). Fonda.Runtime y Fonda.Editor referencian `Unity.TextMeshPro`. Se borraron los materiales de los marcadores viejos (cliente y zona de ingredientes).
 - **L6 (2026-11-23, prueba en Play):** con una prueba temporal: las 3 bandejas arrancan cerradas; a los 2 s entra un cliente por la puerta y a los 3,5 s se sienta en el centro, pide "Hamburguesa sola" (globo "Hamburguesa sola / Medallón"), solo esa bandeja abre 1 ranura, cara feliz y paciencia 25. Tomate en la ranura → `[Tray] Ingrediente que no se pidio`, la cabeza gira hasta 22° y el tomate queda. Al sacarlo y poner medallón → `Plato correcto`, el cliente pasa a comer y la bandeja se cierra; a los 3 s "Terminó de comer y se va", el asiento queda libre y el cliente desaparece en la puerta. El siguiente cliente llega al centro ("Lomito completo"); sin atenderlo (a 5× de velocidad) pasa por neutral y enojada y a los 25 s "Se va enojado [...] sin comer", con el asiento libre y la bandeja cerrada. Sin excepciones. Captura de la vista de escena: pared con puerta a la izquierda, barra y cliente con el globo legible. Scripts temporales borrados. Pendiente: probar a mano con el simulador y revisar la barra curva en el visor.
 
+- **L7 (2026-11-23, entrega):** commits `bf54d94` (regla, asiento, cliente, spawner y tests) y `349e4de` (builder de la barra curva, escena, prefab y documento). Sin push.
