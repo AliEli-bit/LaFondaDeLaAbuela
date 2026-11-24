@@ -38,6 +38,8 @@ namespace Fonda
 
         public event Action<RecipeData> OrderCorrect;
         public event Action<RecipeData> OrderWrong;
+        /// <summary>An ingredient landed in one of the slots of an open order (feedback A1).</summary>
+        public event Action<Tray> IngredientPlaced;
 
         static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
@@ -110,7 +112,11 @@ namespace Fonda
             subscribed = false;
         }
 
-        void OnSlotEntered(SelectEnterEventArgs _) => Evaluate(true);
+        void OnSlotEntered(SelectEnterEventArgs _)
+        {
+            if (!clearing && order != null) IngredientPlaced?.Invoke(this);
+            Evaluate(true);
+        }
 
         // Removing an ingredient never reports an error, but can complete the order (the extra one was taken out).
         void OnSlotExited(SelectExitEventArgs _) => Evaluate(false);

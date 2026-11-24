@@ -17,6 +17,9 @@ namespace Fonda
 
         public UnityEvent onShiftClosed;
 
+        /// <summary>A customer took a correct dish; the int is the combo after this delivery, 0 when it was slow (feedback S3).</summary>
+        public event System.Action<Customer, int> Delivered;
+
         readonly ShiftSummary summary = new ShiftSummary();
         readonly ComboCounter combo = new ComboCounter();
 
@@ -52,13 +55,18 @@ namespace Fonda
         void OnCustomerServed(Customer customer)
         {
             var settings = clock != null ? clock.Settings : null;
-            if (settings == null || customer.Cycle == null) return;
+            if (settings == null || customer.Cycle == null)
+            {
+                Delivered?.Invoke(customer, 0);
+                return;
+            }
             bool fast = ComboRule.IsFast(customer.Cycle.Patience, customer.Cycle.MaxPatience, settings.ComboFastAbove);
             int count = combo.Delivered(fast);
             int bonus = ComboRule.TipBonus(count, settings.ComboCoinsPerStep, settings.ComboMaxBonusCoins);
             customer.ApplyCombo(count, bonus);
             Debug.Log("[ShiftManager] Entrega " + (fast ? "rápida" : "lenta") + ": combo ×" + count +
                       (bonus > 0 ? " (+" + bonus + " moneda(s))" : ""));
+            Delivered?.Invoke(customer, count);
         }
 
         void OnComboBroken(Customer _)

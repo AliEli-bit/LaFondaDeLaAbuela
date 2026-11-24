@@ -21,6 +21,22 @@ public static class FondaCoreLoopBuilder
     const string CustomerPrefabPath = "Assets/Prefabs/Customer.prefab";
     const string CoinPrefabPath = "Assets/Prefabs/TipCoin.prefab";
     const string CustomerProfileFolder = "Assets/Data/Customers";
+    const string FeedbackSettingsPath = "Assets/Data/FeedbackSettings.asset";
+    const string KenneyAudioFolder = "Assets/ThirdParty/Kenney_Audio";
+
+    /// <summary>Default clips of each feedback cue, under Assets/ThirdParty/Kenney_Audio (feedback L2).</summary>
+    public static readonly Dictionary<FeedbackCue, string[]> FeedbackClips = new Dictionary<FeedbackCue, string[]>
+    {
+        { FeedbackCue.Plop, KenneyClips("InterfaceSounds", "drop_001", "drop_002", "drop_003") },
+        { FeedbackCue.Bell, KenneyClips("ImpactSounds", "impactBell_heavy_004") },
+        { FeedbackCue.Wrong, KenneyClips("InterfaceSounds", "error_008") },
+        { FeedbackCue.CoinsLeft, KenneyClips("RPGAudio", "handleCoins2") },
+        { FeedbackCue.CoinBanked, KenneyClips("ImpactSounds", "impactGlass_light_000", "impactGlass_light_001",
+            "impactGlass_light_002", "impactGlass_light_003", "impactGlass_light_004") },
+    };
+
+    static string[] KenneyClips(string pack, params string[] names) =>
+        names.Select(n => KenneyAudioFolder + "/" + pack + "/" + n + ".ogg").ToArray();
 
     // ---- Layout (GDD §5 "Distribución de la estación"; meters, player at the origin facing +z,
     //      x to the right). Straight bar: dispensers in a row, one tray per seat. The side trays sit
@@ -230,7 +246,8 @@ public static class FondaCoreLoopBuilder
         var clock = BuildClock(root, errors);
         var profiles = GetOrCreateCustomerProfiles(menu, errors);
         var spawner = BuildSpawner(root, BuildCustomerPrefab(errors), seats, menu, profiles, clock, errors);
-        BuildShiftManager(root, clock, spawner, tipJar);
+        var shift = BuildShiftManager(root, clock, spawner, tipJar);
+        BuildFeedback(root, GetOrCreateFeedbackSettings(errors), seats, tipJar, shift);
         AssetDatabase.SaveAssets();
     }
 
@@ -849,7 +866,7 @@ public static class FondaCoreLoopBuilder
         return pivot;
     }
 
-    static void BuildShiftManager(Transform root, FondaClock clock, CustomerSpawner spawner, TipJar tipJar)
+    static ShiftManager BuildShiftManager(Transform root, FondaClock clock, CustomerSpawner spawner, TipJar tipJar)
     {
         var labelGo = new GameObject("ShiftSummary");
         labelGo.transform.SetParent(root, false);
@@ -871,6 +888,67 @@ public static class FondaCoreLoopBuilder
         so.FindProperty("summaryLabel").objectReferenceValue = label;
         so.ApplyModifiedPropertiesWithoutUndo();
         labelGo.SetActive(false);
+        return manager;
+    }
+
+    // ---- Feedback (sounds S1, S3-S6) ----------------------------------------------------------
+
+    /// <summary>The feedback settings asset with the Kenney clips; created only if missing so tuning is kept (A6).</summary>
+    static FeedbackSettings GetOrCreateFeedbackSettings(List<string> errors)
+    {
+        var settings = AssetDatabase.LoadAssetAtPath<FeedbackSettings>(FeedbackSettingsPath);
+        if (settings != null) return settings;
+
+        EnsureFolderPath(System.IO.Path.GetDirectoryName(FeedbackSettingsPath).Replace('\\', '/'));
+        settings = ScriptableObject.CreateInstance<FeedbackSettings>();
+        var so = new SerializedObject(settings);
+        foreach (var pair in FeedbackClips)
+        {
+            var clips = so.FindProperty(FeedbackField(pair.Key)).FindPropertyRelative("clips");
+            clips.arraySize = pair.Value.Length;
+            for (int i = 0; i < pair.Value.Length; i++)
+            {
+                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(pair.Value[i]);
+                if (clip == null) errors.Add("Feedback clip not found: " + pair.Value[i]);
+                clips.GetArrayElementAtIndex(i).objectReferenceValue = clip;
+            }
+        }
+        so.ApplyModifiedPropertiesWithoutUndo();
+        AssetDatabase.CreateAsset(settings, FeedbackSettingsPath);
+        return settings;
+    }
+
+    static string FeedbackField(FeedbackCue cue)
+    {
+        switch (cue)
+        {
+            case FeedbackCue.Plop: return "plop";
+            case FeedbackCue.Bell: return "bell";
+            case FeedbackCue.Wrong: return "wrong";
+            case FeedbackCue.CoinsLeft: return "coinsLeft";
+            default: return "coinBanked";
+        }
+    }
+
+    static void BuildFeedback(Transform root, FeedbackSettings settings, BarSeat[] seats, TipJar tipJar, ShiftManager shift)
+    {
+        var go = new GameObject("Feedback");
+        go.transform.SetParent(root, false);
+        var manager = go.AddComponent<FeedbackManager>();
+        var so = new SerializedObject(manager);
+        so.FindProperty("settings").objectReferenceValue = settings;
+        var trays = so.FindProperty("trays");
+        var seatsProp = so.FindProperty("seats");
+        trays.arraySize = seats.Length;
+        seatsProp.arraySize = seats.Length;
+        for (int i = 0; i < seats.Length; i++)
+        {
+            trays.GetArrayElementAtIndex(i).objectReferenceValue = seats[i] != null ? seats[i].Tray : null;
+            seatsProp.GetArrayElementAtIndex(i).objectReferenceValue = seats[i];
+        }
+        so.FindProperty("tipJar").objectReferenceValue = tipJar;
+        so.FindProperty("shiftManager").objectReferenceValue = shift;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     // ---- Helpers --------------------------------------------------------------------------

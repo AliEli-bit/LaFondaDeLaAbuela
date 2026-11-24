@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Feedback;
 
 /// <summary>
 /// Builds the "Fonda" scene: fixed XR rig behind a straight bar, no locomotion, dressed with the KayKit look of the
@@ -88,6 +89,8 @@ public static class FondaSceneBuilder
 
         EnsureInteractionManager();
         DisableLocomotion(rig, errors);
+        if (EnableReleaseHaptics(rig) == 0)
+            Fail(errors, "No SimpleHapticFeedback found under the rig; release vibration NOT enabled.");
         var fondaRoot = BuildBlockout();
         FondaSketchBuilder.BuildDressing(fondaRoot, errors);
         FondaCoreLoopBuilder.Build(fondaRoot, errors);
@@ -193,6 +196,27 @@ public static class FondaSceneBuilder
         }
         if (managers != 2)
             Fail(errors, "Expected 2 ControllerInputActionManager components (left/right), found " + managers + ".");
+    }
+
+    // ---- Feedback S2: vibrate on grab and on release ---------------------------------------
+
+    /// <summary>
+    /// Turns on the release vibration of every SimpleHapticFeedback under the rig, keeping its values; grab already
+    /// vibrates in the Starter Assets (feedback A4). Returns how many components were found.
+    /// </summary>
+    public static int EnableReleaseHaptics(GameObject rig)
+    {
+        int found = 0;
+        if (rig == null) return 0;
+        foreach (var haptics in rig.GetComponentsInChildren<SimpleHapticFeedback>(true))
+        {
+            // Through SerializedObject so the scene keeps it as an override of the rig prefab.
+            var so = new SerializedObject(haptics);
+            so.FindProperty("m_PlaySelectExited").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            found++;
+        }
+        return found;
     }
 
     static void Fail(List<string> errors, string message)

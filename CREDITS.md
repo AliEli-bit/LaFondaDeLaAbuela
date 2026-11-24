@@ -5,6 +5,9 @@ Third-party assets used in La Fonda de la Abuela, with their licenses.
 | Asset | Author | License | Location |
 |---|---|---|---|
 | KayKit Restaurant Bits 1.0 | Kay Lousberg ([kaylousberg.com](https://www.kaylousberg.com)) | CC0 1.0 | `Assets/ThirdParty/KayKit_RestaurantBits/` (see `License.txt`) |
+| Kenney Impact Sounds 1.0 | Kenney ([kenney.nl](https://kenney.nl/assets/impact-sounds)) | CC0 1.0 | `Assets/ThirdParty/Kenney_Audio/ImpactSounds/` (bell, jar; see `License.txt`) |
+| Kenney Interface Sounds 1.0 | Kenney ([kenney.nl](https://kenney.nl/assets/interface-sounds)) | CC0 1.0 | `Assets/ThirdParty/Kenney_Audio/InterfaceSounds/` (plop, error; see `License.txt`) |
+| Kenney RPG Audio 1.0 | Kenney ([kenney.nl](https://kenney.nl/assets/rpg-audio)) | CC0 1.0 | `Assets/ThirdParty/Kenney_Audio/RPGAudio/` (coins; see `License.txt`) |
 
 ## Own assets
 
