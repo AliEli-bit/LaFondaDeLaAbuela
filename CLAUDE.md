@@ -120,7 +120,7 @@ Implementar de forma **parametrizable** (ScriptableObjects o campos serializados
 - Barra recta frente al jugador: de x = −1,05 a 1,05, tapa de z = 0,16 a 0,64, alto 0,90. Del lado de la abuela, cajones; del lado de los clientes, frente de madera cerrado y apoyapiés.
 - Para que todo quede al alcance, las bandejas de los lados se corren hacia el centro: no quedan justo frente a su cliente, sino 26 cm hacia adentro. Con las bandejas frente a cada asiento, las de los lados quedarían a ~0,84, fuera de alcance.
 - 6 ingredientes en fila a z = 0,24, de izquierda a derecha: lechuga (x = −0,40), tomate (−0,24), queso (−0,08), medallón (0,08), lomito (0,24), papas (0,40). Quedan a 0,16 entre centros; el más lejano, a 0,47.
-- 3 bandejas a z = 0,40, en x = −0,34, 0 y 0,34, una por asiento. Cada bandeja tiene 3 ranuras a 0,10 entre sí; la ranura más lejana queda a ~0,59.
+- 3 bandejas a z = 0,40, en x = −0,34, 0 y 0,34, una por asiento, de 0,20 × 0,16. El plato se arma **apilado** sobre la base (pan o tazón): lo que se suelta en cualquier parte de la bandeja cae encima de la pila, en el centro. El centro de las bandejas de los lados queda a ~0,53.
 - 3 asientos en fila a z = 0,95, en x = −0,60, 0 y 0,60 (0,60 entre clientes), y un lugar de espera de pie en (−0,35; 1,65).
 - Local de 8 × 5,2: pared de la cocina detrás de la abuela (z = −1,60) y pared del fondo detrás de los clientes (z = 3,60), con puerta a la izquierda y el reloj a 2,20 de alto.
 - Frasco de propinas en el extremo derecho de la barra, en (0,53; 0,24), al alcance de la mano. Las monedas aparecen del lado del cliente, junto a su bandeja y sin taparla: (0; 0,56) para el asiento del centro y (±0,22; 0,53) para los de los lados.
@@ -177,7 +177,7 @@ Modelos de KayKit Restaurant Bits: medallón = `food_ingredient_burger_cooked`, 
 - Uso de las propinas (propuesto: el jugador las echa al frasco + resumen final).
 - Qué pasa con las monedas que el jugador no recoge (propuesto: se suman solas al final del turno).
 - Diseño de las manos de la abuela y guion de sus frases.
-- Probar en el visor que las bandejas de los lados (x = ±0,34, ranura más lejana a ~0,59) se alcanzan cómodo sin moverse del lugar.
+- Probar en el visor que las bandejas de los lados (x = ±0,34, centro a ~0,53) se alcanzan cómodo sin moverse del lugar.
 - Tiempo que el cliente se queda comiendo antes de liberar el asiento.
 - Si la paciencia del cliente que espera de pie corre o no.
 - Valores finales de cada tipo de cliente y con qué frecuencia aparece cada uno.

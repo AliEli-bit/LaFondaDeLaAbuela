@@ -71,15 +71,27 @@ namespace Fonda.Tests
             Assert.IsFalse(bowl.activeSelf, "bowl after a bun order");
         }
 
-        // Existing behavior touched by SetOrder: one active slot per ordered ingredient.
+        // An open order enables every slot, so a wrong ingredient never fills the tray; no order closes them all.
         [Test]
-        public void SetOrder_StillActivatesOneSlotPerIngredient()
+        public void SetOrder_EnablesEverySlot_AndNoOrderClosesThem()
         {
             var (tray, _, _, slots) = BuildTray();
-            tray.SetOrder(Recipe(DishBase.Bun, 2));
-            Assert.IsTrue(slots[0].gameObject.activeSelf);
-            Assert.IsTrue(slots[1].gameObject.activeSelf);
-            Assert.IsFalse(slots[2].gameObject.activeSelf);
+            tray.SetOrder(Recipe(DishBase.Bun, 1));
+            foreach (var slot in slots) Assert.IsTrue(slot.gameObject.activeSelf, slot.name + " with an order");
+
+            tray.SetOrder(null);
+            foreach (var slot in slots) Assert.IsFalse(slot.gameObject.activeSelf, slot.name + " without an order");
+        }
+
+        // The dish is a pile: only the next empty slot catches, so two slots never compete for one drop.
+        [Test]
+        public void SetOrder_OpensOnlyTheNextEmptySlot()
+        {
+            var (tray, _, _, slots) = BuildTray();
+            tray.SetOrder(Recipe(DishBase.Bun, 3));
+            Assert.IsTrue(slots[0].socketActive, "the first slot waits for the first layer");
+            Assert.IsFalse(slots[1].socketActive);
+            Assert.IsFalse(slots[2].socketActive);
         }
 
         // S9: slots only take ingredients; a sauce bottle (any other grabbable) is rejected.

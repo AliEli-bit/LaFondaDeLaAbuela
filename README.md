@@ -71,6 +71,7 @@ The customer characters are generated in Blender from `Tools/Blender/fonda_figur
 | `Assets/Scripts/Data/` | ScriptableObject definitions (ingredients, recipes, difficulty, customer types, sounds) |
 | `Assets/Scripts/Editor/` | Scene builders and import rules |
 | `Assets/Tests/EditMode/` | Edit Mode tests |
+| `Assets/Tests/PlayMode/` | Play Mode tests (load the Fonda scene and drop ingredients with physics) |
 | `Assets/Art/` | Project art (characters, sketch materials) |
 | `Assets/ThirdParty/` | Third-party packs (KayKit Restaurant Bits, Kenney audio) |
 | `Tools/Blender/` | Character generator for Blender |
@@ -78,7 +79,8 @@ The customer characters are generated in Blender from `Tools/Blender/fonda_figur
 
 ## Tests
 
-Open *Window → General → Test Runner*, choose **EditMode** and click **Run All**. Run them before opening a
+Open *Window → General → Test Runner*, choose **EditMode** and click **Run All**, then do the same in **PlayMode**.
+The Play Mode tests use `Assets/Scenes/Fonda.unity`, so rebuild the scene first if you changed a builder. Run them before opening a
 pull request.
 
 ## Working together
