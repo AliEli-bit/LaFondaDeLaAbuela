@@ -52,10 +52,9 @@ public static class FondaSceneBuilder
             return;
         }
 
-        if (File.Exists(ScenePath) &&
-            !EditorUtility.DisplayDialog("Fonda", "Ya existe " + ScenePath + ". Quieres sobrescribirla?", "Sobrescribir", "Cancelar"))
-            return;
-
+        // The scene is generated (see README): it is always rebuilt from scratch, without asking, so the menu never
+        // stalls on a hidden dialog and batch mode (-executeMethod FondaSceneBuilder.Build) can rebuild it.
+        // Unsaved changes in the scenes that are open are still offered to be saved first.
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             return;
 
