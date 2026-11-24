@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e95fed10184eb4098902128f230a1854, type: 3}
+  m_Name: DifficultySettings
+  m_EditorClassIdentifier: Fonda.Runtime::Fonda.DifficultySettings
+  openingSeconds: 60
+  normalSeconds: 180
+  rushSeconds: 90
+  firstArrivalSeconds: 2
+  intervalStart: 12
+  intervalEnd: 5
+  patienceStart: 25
+  patienceEnd: 15
+  eatSeconds: 3
+  minIngredients: 1
+  maxIngredients: 3
+  openingMaxCustomers: 1
+  normalMaxCustomers: 2
+  rushMaxCustomers: 3
+  startHour: 15
+  endHour: 20
