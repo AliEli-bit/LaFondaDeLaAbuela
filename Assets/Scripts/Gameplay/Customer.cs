@@ -19,7 +19,7 @@ namespace Fonda
         [SerializeField] Renderer bodyRenderer;
         [SerializeField] Renderer faceRenderer;
         [SerializeField] TextMeshPro bubble;
-        [Tooltip("Blender characters; one is picked at random per customer. Empty: the blockout parts above are used.")]
+        [Tooltip("Blender characters in FondaCoreLoopBuilder.CustomerTypes order; the profile picks one, or one at random. Empty: the blockout parts above are used.")]
         [SerializeField] CustomerLook[] looks = Array.Empty<CustomerLook>();
 
         [Header("Motion")]
@@ -56,6 +56,8 @@ namespace Fonda
         public RecipeData Order { get; private set; }
         public BarSeat Seat { get; private set; }
         public CustomerCycle Cycle { get; private set; }
+        /// <summary>The type of customer (customer types S1); null for a plain customer.</summary>
+        public CustomerProfile Profile { get; private set; }
         /// <summary>Extra coins earned by the speed combo when served (combo S2).</summary>
         public int TipBonus { get; private set; }
 
@@ -68,9 +70,11 @@ namespace Fonda
         Coroutine shake;
 
         /// <summary>Sets the customer on its way to a seat it has already claimed.</summary>
-        public void Init(RecipeData order, BarSeat seat, Vector3 doorPosition, float patienceSeconds, float eatSeconds)
+        public void Init(RecipeData order, BarSeat seat, Vector3 doorPosition, float patienceSeconds, float eatSeconds,
+            CustomerProfile profile = null)
         {
             Order = order;
+            Profile = profile;
             Seat = seat;
             door = doorPosition;
             Cycle = new CustomerCycle(patienceSeconds, eatSeconds);
@@ -80,7 +84,8 @@ namespace Fonda
                 SetColor(bodyRenderer, bodyColors[UnityEngine.Random.Range(0, bodyColors.Length)]);
             ShowBubble(null);
             UpdateFace();
-            Debug.Log("[Customer] Entra y va al asiento " + seat.name + " (pide " + order.DisplayName + ")");
+            Debug.Log("[Customer] Entra " + (profile != null ? profile.DisplayName : "un cliente") + " y va al asiento " +
+                      seat.name + " (pide " + order.DisplayName + ")");
         }
 
         /// <summary>Called by the seat when the tray matches the order. False if not waiting for it.</summary>
@@ -146,7 +151,7 @@ namespace Fonda
             seated = true;
             Cycle.Sit();
             Seat.OpenOrder(Order);
-            ShowBubble(OrderText(Order));
+            ShowBubble(OrderText(Order, Profile));
             Debug.Log("[Customer] Se sienta en " + Seat.name + " y pide " + Order.DisplayName);
         }
 
@@ -166,7 +171,7 @@ namespace Fonda
                 ShowBubble(null);
                 Debug.Log("[Customer] Terminó de comer y se va de " + Seat.name);
             }
-            int coins = Seat.LeaveTip(Cycle, TipBonus).Count;
+            int coins = Seat.LeaveTip(Cycle, TipBonus, Profile).Count;
             if (coins > 0)
                 Debug.Log("[Customer] Deja " + coins + " moneda(s) junto a la bandeja de " + Seat.name +
                           (TipBonus > 0 ? " (+" + TipBonus + " por el combo)" : ""));
@@ -209,12 +214,13 @@ namespace Fonda
             shake = null;
         }
 
-        /// <summary>Shows one of the Blender characters at random and puts the bubble above its head.</summary>
+        /// <summary>Shows the profile's Blender character (or one at random) and puts the bubble above its head.</summary>
         void PickLook()
         {
             look = null;
             if (looks == null || looks.Length == 0) return;
-            look = looks[UnityEngine.Random.Range(0, looks.Length)];
+            int index = Profile != null ? Profile.LookIndex : -1;
+            look = index >= 0 && index < looks.Length ? looks[index] : looks[UnityEngine.Random.Range(0, looks.Length)];
             foreach (var l in looks)
                 if (l?.Root != null) l.Root.SetActive(l == look);
             if (look.Head != null) head = look.Head;
@@ -262,9 +268,11 @@ namespace Fonda
             if (away.sqrMagnitude > 1e-6f) bubble.transform.rotation = Quaternion.LookRotation(away, Vector3.up);
         }
 
-        static string OrderText(RecipeData order)
+        /// <summary>The order bubble: the dish name, or the type's own title (A6), and the ingredients below.</summary>
+        public static string OrderText(RecipeData order, CustomerProfile profile = null)
         {
-            var sb = new StringBuilder(order.DisplayName);
+            var title = profile != null && !string.IsNullOrEmpty(profile.OrderTitle) ? profile.OrderTitle : order.DisplayName;
+            var sb = new StringBuilder(title);
             sb.Append('\n');
             for (int i = 0; i < order.Ingredients.Count; i++)
             {

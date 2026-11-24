@@ -18,6 +18,8 @@ namespace Fonda
         [SerializeField] RecipeData[] menu;
         [SerializeField] Transform door;
         [SerializeField] FondaClock clock;
+        [Tooltip("Types of customer (customer types S1). Empty: plain customers with a random look.")]
+        [SerializeField] CustomerProfile[] profiles = Array.Empty<CustomerProfile>();
 
         readonly List<Customer> active = new List<Customer>();
         readonly List<bool> occupied = new List<bool>();
@@ -64,7 +66,11 @@ namespace Fonda
         void Spawn(BarSeat seat, float t)
         {
             var settings = clock.Settings;
-            var candidates = MenuRule.Candidates(ingredientCounts, settings.IngredientsAt(t));
+            int target = settings.IngredientsAt(t);
+            var profile = PickProfile(target);
+            var candidates = profile != null
+                ? CustomerTypeRule.DishCandidates(profile, menu, target)
+                : MenuRule.Candidates(ingredientCounts, target);
             var recipe = menu[candidates[Random.Range(0, candidates.Count)]];
             var customer = Instantiate(customerPrefab, door.position, door.rotation);
             seat.Claim(customer);
@@ -72,8 +78,26 @@ namespace Fonda
             customer.Served += c => CustomerServed?.Invoke(c);
             customer.Refused += c => CustomerRefused?.Invoke(c);
             customer.LeftAngry += c => CustomerLeftAngry?.Invoke(c);
-            customer.Init(recipe, seat, door.position, settings.PatienceAt(t), settings.EatSeconds);
+            float patience = settings.PatienceAt(t), eat = settings.EatSeconds;
+            if (profile != null)
+            {
+                patience = profile.PatienceFor(patience);
+                eat = profile.EatFor(eat);
+            }
+            customer.Init(recipe, seat, door.position, patience, eat, profile);
             active.Add(customer);
+        }
+
+        /// <summary>A type that can order a dish of this size, by weight (customer types A4, A5). Null without types.</summary>
+        CustomerProfile PickProfile(int target)
+        {
+            if (profiles == null || profiles.Length == 0) return null;
+            var eligible = CustomerTypeRule.Eligible(profiles, menu, target);
+            int index = CustomerTypeRule.Pick(profiles, eligible, Random.value);
+            if (index < 0) return null;
+            var profile = profiles[index];
+            // A type whose favourites are not on this menu falls back to a plain customer.
+            return CustomerTypeRule.Dishes(profile, menu).Count > 0 ? profile : null;
         }
 
         void OnCustomerLeft(Customer customer)
