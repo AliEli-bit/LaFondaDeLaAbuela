@@ -22,9 +22,9 @@ Rama: `feat/tips` (desde `feat/bar-customer`, sin pushear). Entrega: `single-pr`
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S1, S2, A1, A3 | inline por el padre (sin razón de escritor): `TipRule` (monedas según paciencia, 0 si se fue enojado) y `TipJar.Deposit` (cuenta una vez, no si está sostenida), tests RED antes | hecho: RED 7 (`NotImplementedException`), GREEN | C1 |
-| T2 | S1, S3, A2, A5 | inline: `TipCoin`, monedas al irse desde `BarSeat`, frasco y cartel, lugares de monedas y frasco en el builder con validación | hecho: RED 4 (stubs en cero), GREEN 46/46; builder `errors: 0` | C2 |
-| T3 | S5 | padre en batch (Unity cerrado): tests, builder, prueba en Play con test PlayMode temporal | hecho: 46/46, prueba en Play (L5); falta prueba a mano | C2 |
+| T1 | S1, S2, A1, A3 | inline por el padre (sin razón de escritor): `TipRule` (monedas según paciencia, 0 si se fue enojado) y `TipJar.Deposit` (cuenta una vez, no si está sostenida), tests RED antes | hecho: RED 7 (`NotImplementedException`), GREEN | 7d80ac5 |
+| T2 | S1, S3, A2, A5 | inline: `TipCoin`, monedas al irse desde `BarSeat`, frasco y cartel, lugares de monedas y frasco en el builder con validación | hecho: RED 4 (stubs en cero), GREEN 46/46; builder `errors: 0` | 045f64c |
+| T3 | S5 | padre en batch (Unity cerrado): tests, builder, prueba en Play con test PlayMode temporal | hecho: 46/46, prueba en Play (L5); falta prueba a mano | 045f64c |
 
 ## Log
 
@@ -33,3 +33,4 @@ Rama: `feat/tips` (desde `feat/bar-customer`, sin pushear). Entrega: `single-pr`
 - **L3 (2026-11-23, corrección del layout):** la validación nueva marcó la moneda del centro a 0,0999 m de la ranura del medio (mínimo 0,10). Se movió de 0,40 a 0,39 m: 0,11 m de la ranura y 0,106 m del dispensador de queso.
 - **L4 (2026-11-23, RED y GREEN):** `TipTests` (7 casos) fallaron con `NotImplementedException` sobre stubs; las 2 pruebas nuevas de `BarLayoutTests` fallaron con posiciones en cero. GREEN: 46/46 EditMode. Dos correcciones durante GREEN: un `Tips.cs` con tres clases rompía la serialización de MonoBehaviours (se separó en `TipRule.cs`, `TipCoin.cs`, `TipJar.cs`), y una moneda caía sobre el borde de la bandeja (altura 0,924), así que las monedas van en fila y en los costados la fila corre en sentido radial.
 - **L5 (2026-11-23, prueba en Play):** con un test PlayMode temporal sobre `Fonda`: un cliente atendido dejó 3 monedas a 0,904 m de alto, a menos de 0,045 m de su lugar; una moneda sostenida dentro del frasco no contó (total 0); al soltarla, total 1 y cartel "Propinas: $1"; las otras dos, soltadas de a una, total 3, "Propinas: $3" y la pila visible; el siguiente cliente, sin atender, se fue enojado y no dejó monedas (total sigue en 3). Sin excepciones. Scripts temporales borrados. Pendiente: prueba a mano con el simulador.
+- **L6 (2026-11-23, entrega):** commits `7d80ac5` (regla, moneda, frasco, asiento y tests) y `045f64c` (builder del frasco y lugares de monedas, escena, prefab, materiales y documento). Sin push.
