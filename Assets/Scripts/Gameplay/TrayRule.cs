@@ -4,15 +4,17 @@ namespace Fonda
 {
     public enum TrayEvaluation
     {
-        /// <summary>Tray not full yet: nothing is evaluated.</summary>
+        /// <summary>Everything placed so far is part of the order, but something is still missing.</summary>
         Incomplete,
         Correct,
+        /// <summary>Something placed is not part of the order (not ordered, or more copies than ordered).</summary>
         Wrong
     }
 
     /// <summary>
     /// Pure rule for judging a tray against an order. Independent of slot order, but duplicates count.
-    /// An error is only reported once the tray is full (placed count == required count).
+    /// An error is reported as soon as the placed ingredients stop being part of the order,
+    /// even if the tray is not full; removing the extra ingredient makes the tray valid again.
     /// </summary>
     public static class TrayRule
     {
@@ -20,11 +22,8 @@ namespace Fonda
         /// <param name="placed">One entry per occupied slot; null means an occupant that is not an identifiable ingredient.</param>
         public static TrayEvaluation Evaluate(IReadOnlyList<IngredientData> required, IReadOnlyList<IngredientData> placed)
         {
-            if (required == null || required.Count == 0 || placed == null || placed.Count < required.Count)
+            if (required == null || required.Count == 0 || placed == null)
                 return TrayEvaluation.Incomplete;
-
-            if (placed.Count != required.Count)
-                return TrayEvaluation.Wrong;
 
             var remaining = new Dictionary<IngredientData, int>();
             foreach (var r in required)
@@ -40,7 +39,7 @@ namespace Fonda
                     return TrayEvaluation.Wrong;
                 remaining[p] = n - 1;
             }
-            return TrayEvaluation.Correct;
+            return placed.Count == required.Count ? TrayEvaluation.Correct : TrayEvaluation.Incomplete;
         }
     }
 }

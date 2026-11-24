@@ -33,14 +33,13 @@ namespace Fonda.Tests
         }
 
         [Test]
-        public void IncompleteTray_ProducesNoEvaluation()
+        public void PartOfTheOrder_IsIncomplete()
         {
             var order = new List<IngredientData> { arroz, huevo };
 
-            // Even a wrong ingredient does not count as an error until the tray is full.
             Assert.AreEqual(TrayEvaluation.Incomplete, TrayRule.Evaluate(order, new List<IngredientData>()));
             Assert.AreEqual(TrayEvaluation.Incomplete, TrayRule.Evaluate(order, new List<IngredientData> { arroz }));
-            Assert.AreEqual(TrayEvaluation.Incomplete, TrayRule.Evaluate(order, new List<IngredientData> { papa }));
+            Assert.AreEqual(TrayEvaluation.Incomplete, TrayRule.Evaluate(order, new List<IngredientData> { huevo }));
         }
 
         [Test]
@@ -53,19 +52,39 @@ namespace Fonda.Tests
         }
 
         [Test]
-        public void FullTrayNotMatchingOrder_IsWrong()
+        public void IngredientNotOrdered_IsWrongImmediately_EvenIfTrayNotFull()
         {
             var order = new List<IngredientData> { arroz, huevo };
 
+            Assert.AreEqual(TrayEvaluation.Wrong, TrayRule.Evaluate(order, new List<IngredientData> { papa }));
             Assert.AreEqual(TrayEvaluation.Wrong, TrayRule.Evaluate(order, new List<IngredientData> { arroz, papa }));
         }
 
         [Test]
-        public void DuplicatesCount_ArrozArrozIsNotArrozHuevo()
+        public void MoreCopiesThanOrdered_IsWrongImmediately()
+        {
+            var order = new List<IngredientData> { arroz, huevo, papa };
+
+            // The second arroz is not part of the order, even though the tray still has a free slot.
+            Assert.AreEqual(TrayEvaluation.Wrong, TrayRule.Evaluate(order, new List<IngredientData> { arroz, arroz }));
+        }
+
+        [Test]
+        public void RemovingTheExtraIngredient_ReturnsToIncompleteOrCorrect()
         {
             var order = new List<IngredientData> { arroz, huevo };
 
-            Assert.AreEqual(TrayEvaluation.Wrong, TrayRule.Evaluate(order, new List<IngredientData> { arroz, arroz }));
+            Assert.AreEqual(TrayEvaluation.Wrong, TrayRule.Evaluate(order, new List<IngredientData> { arroz, papa }));
+            Assert.AreEqual(TrayEvaluation.Incomplete, TrayRule.Evaluate(order, new List<IngredientData> { arroz }));
+            Assert.AreEqual(TrayEvaluation.Correct, TrayRule.Evaluate(order, new List<IngredientData> { arroz, huevo }));
+        }
+
+        [Test]
+        public void UnidentifiedOccupant_IsWrong()
+        {
+            var order = new List<IngredientData> { arroz, huevo };
+
+            Assert.AreEqual(TrayEvaluation.Wrong, TrayRule.Evaluate(order, new List<IngredientData> { null }));
         }
     }
 }

@@ -10,8 +10,8 @@ namespace Fonda
 {
     /// <summary>
     /// Tray with one socket per slot. Only as many slots as the active order has ingredients are enabled.
-    /// When the tray is full it is judged with <see cref="TrayRule"/>; after any judgment it is emptied
-    /// (assumption A1: delivery on success, "the customer asks again" on failure).
+    /// Every change is judged with <see cref="TrayRule"/>. A wrong ingredient is reported as soon as it
+    /// enters and stays until the player removes it; a correct tray is delivered and emptied (A1).
     /// </summary>
     public class Tray : MonoBehaviour
     {
@@ -38,7 +38,7 @@ namespace Fonda
 
         readonly List<IngredientData> placed = new List<IngredientData>();
         MaterialPropertyBlock block;
-        bool busy; // true while a judged tray waits to be emptied
+        bool busy; // true while a correct tray waits to be delivered and emptied
         bool clearing; // true while slots are being emptied (ignores the resulting select-exit events)
         bool subscribed;
 
@@ -79,8 +79,8 @@ namespace Fonda
             foreach (var slot in slots)
             {
                 if (slot == null) continue;
-                slot.selectEntered.AddListener(OnSlotChanged);
-                slot.selectExited.AddListener(OnSlotChanged);
+                slot.selectEntered.AddListener(OnSlotEntered);
+                slot.selectExited.AddListener(OnSlotExited);
             }
             subscribed = true;
         }
@@ -91,15 +91,18 @@ namespace Fonda
             foreach (var slot in slots)
             {
                 if (slot == null) continue;
-                slot.selectEntered.RemoveListener(OnSlotChanged);
-                slot.selectExited.RemoveListener(OnSlotChanged);
+                slot.selectEntered.RemoveListener(OnSlotEntered);
+                slot.selectExited.RemoveListener(OnSlotExited);
             }
             subscribed = false;
         }
 
-        void OnSlotChanged(BaseInteractionEventArgs _) => Evaluate();
+        void OnSlotEntered(SelectEnterEventArgs _) => Evaluate(true);
 
-        void Evaluate()
+        // Removing an ingredient never reports an error, but can complete the order (the extra one was taken out).
+        void OnSlotExited(SelectExitEventArgs _) => Evaluate(false);
+
+        void Evaluate(bool entered)
         {
             if (busy || clearing || order == null) return;
 
@@ -113,15 +116,27 @@ namespace Fonda
             }
 
             var result = TrayRule.Evaluate(order.Ingredients, placed);
-            if (result == TrayEvaluation.Incomplete) return;
+            if (result == TrayEvaluation.Correct)
+            {
+                Debug.Log("[Tray] Plato correcto: " + order.DisplayName);
+                OrderCorrect?.Invoke(order);
+                onOrderCorrect?.Invoke();
+                StartCoroutine(FlashAndClear(correctColor));
+            }
+            else if (result == TrayEvaluation.Wrong && entered)
+            {
+                Debug.Log("[Tray] Ingrediente que no se pidio en: " + order.DisplayName);
+                OrderWrong?.Invoke(order);
+                onOrderWrong?.Invoke();
+                StartCoroutine(Flash(wrongColor));
+            }
+        }
 
-            bool correct = result == TrayEvaluation.Correct;
-            Debug.Log("[Tray] " + (correct ? "Plato correcto: " : "Plato incorrecto: ") + order.DisplayName);
-
-            if (correct) { OrderCorrect?.Invoke(order); onOrderCorrect?.Invoke(); }
-            else { OrderWrong?.Invoke(order); onOrderWrong?.Invoke(); }
-
-            StartCoroutine(FlashAndClear(correct ? correctColor : wrongColor));
+        IEnumerator Flash(Color color)
+        {
+            SetFlash(color);
+            yield return new WaitForSeconds(flashSeconds);
+            if (!busy) SetFlash(null);
         }
 
         IEnumerator FlashAndClear(Color color)
